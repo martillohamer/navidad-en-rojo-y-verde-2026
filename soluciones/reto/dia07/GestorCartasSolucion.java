@@ -1,7 +1,1 @@
-package reto.dia07;
-
-public class GestorCartasSolucion {
-    public boolean validar(Carta c) {
-        return c != null;
-    }
-}
+package reto.dia07; public class GestorCartasSolucion { public boolean validar(Carta c) { return c != null && c.getTexto() != null && !c.getTexto().isEmpty(); } }

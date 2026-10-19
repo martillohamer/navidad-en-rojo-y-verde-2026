@@ -1,1 +1,1 @@
-package reto.dia14; public class ParserInventarioSolucion { public int extraerStockTotal(String l) { return Integer.parseInt(l.split(",")[1].trim()); } }
+package reto.dia14; public class ParserInventarioSolucion { public int extraerStockTotal(String l) { if(l==null||!l.contains(",")) return 0; try { return Integer.parseInt(l.split(",")[1].trim()); } catch(Exception e) { return 0; } } }

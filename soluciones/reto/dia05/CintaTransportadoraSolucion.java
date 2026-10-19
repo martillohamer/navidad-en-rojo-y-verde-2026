@@ -1,1 +1,1 @@
-package reto.dia05; public class CintaTransportadoraSolucion { public int procesar(int c) { if(c>100) throw new ConveyorCapacityException("Exceso"); return c; } }
+package reto.dia05; public class CintaTransportadoraSolucion { public int procesar(int c) { if(c>100) throw new ConveyorCapacityException("Capacidad excedida"); return c; } }
