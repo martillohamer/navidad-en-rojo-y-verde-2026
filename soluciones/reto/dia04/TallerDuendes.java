@@ -7,9 +7,9 @@ public class TallerDuendes {
 
     public int calcularProduccionTotal(List<Integer> producciones) {
         int total = 0;
-        for (Integer p : producciones) {
+        for (int p : producciones) {
             if (p < 0) {
-                throw new InvalidProductionException("La producción no puede ser negativa: " + p);
+                throw new InvalidProductionException("Produccion negativa: " + p);
             }
             total += p;
         }
@@ -18,7 +18,7 @@ public class TallerDuendes {
 
     public List<Integer> filtrarAltaProduccion(List<Integer> producciones, int umbral) {
         List<Integer> resultado = new ArrayList<>();
-        for (Integer p : producciones) {
+        for (int p : producciones) {
             if (p > umbral) {
                 resultado.add(p);
             }

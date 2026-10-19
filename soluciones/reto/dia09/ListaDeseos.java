@@ -9,7 +9,7 @@ public class ListaDeseos {
     public Map<String, Integer> contarRegalos(List<String> deseos) {
         Map<String, Integer> conteo = new HashMap<>();
         for (String deseo : deseos) {
-            conteo.put(deseo, conteo.getOrDefault(deseo, 0) + 1);
+            conteo.merge(deseo, 1, Integer::sum);
         }
         return conteo;
     }

@@ -7,8 +7,8 @@ import java.util.List;
 public class GestorCartas {
 
     public List<Carta> ordenarPorUrgenciaDescendente(List<Carta> cartas) {
-        List<Carta> resultado = new ArrayList<>(cartas);
-        resultado.sort(Comparator.comparingInt(Carta::getUrgencia).reversed());
-        return resultado;
+        List<Carta> copia = new ArrayList<>(cartas); // no tocamos la lista original
+        copia.sort(Comparator.comparingInt(Carta::getUrgencia).reversed());
+        return copia;
     }
 }
