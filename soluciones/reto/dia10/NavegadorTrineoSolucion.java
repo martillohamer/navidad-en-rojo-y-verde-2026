@@ -1,1 +1,0 @@
-package reto.dia10; public class NavegadorTrineoSolucion { public Posicion calcularDestino(String m) { int x=0, y=0; if(m!=null) { for(char c:m.toCharArray()) { if(c=='N')y++; if(c=='S')y--; if(c=='E')x++; if(c=='O'||c=='W')x--; } } return new Posicion(x, y); } }
