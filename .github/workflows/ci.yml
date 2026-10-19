@@ -1,0 +1,40 @@
+name: CI Navidad Roja y Verde
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, feat/* ]
+
+jobs:
+  validar-soluciones:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Validar Soluciones en Verde
+        run: |
+          mvn -Psoluciones test
+          # Verificar que se ejecutaron tests y no 0
+          if grep -q "Tests run: 0" target/surefire-reports/*.txt 2>/dev/null; then
+            echo "Error: Se ejecutaron 0 tests en validar-soluciones"
+            exit 1
+          fi
+
+  progreso:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Ejecutar Tests (Modo Reto Rojo)
+        run: mvn test -Dmaven.test.failure.ignore=true || true
+      - name: Mostrar Progreso
+        run: ./scripts/progreso
