@@ -15,5 +15,6 @@ class Dia03Test {
     void debeManejarCeroONegativos() {
         RetoDia03 reto = new RetoDia03();
         assertEquals("¡Navidad!", reto.cuentaAtras(0));
+        assertEquals("¡Navidad!", reto.cuentaAtras(-3));
     }
 }

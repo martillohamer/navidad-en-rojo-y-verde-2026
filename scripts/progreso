@@ -1,34 +1,58 @@
 #!/usr/bin/env bash
 echo "🎄 Calculando tu progreso navideño..."
-mvn test -Dmaven.test.failure.ignore=true -q
+mvn test -Dmaven.test.failure.ignore=true -q > /dev/null 2>&1
 
-# Evaluamos estado de cada reto ejecutando tests específicos
-# Día 1
-mvn test -Dtest=Dia01Test -q
-D1=$?
-# Día 2
-mvn test -Dtest=Dia02Test -q
-D2=$?
-# Día 3
-mvn test -Dtest=Dia03Test -q
-D3=$?
+REPORTS_DIR="target/surefire-reports"
 
-L1="🔴"
-L2="🔴"
-L3="🔴"
+if [ ! -d "$REPORTS_DIR" ]; then
+    echo "No se encontraron informes de tests en $REPORTS_DIR. ¿Has ejecutado 'mvn test'?"
+    exit 1
+fi
 
-[ $D1 -eq 0 ] && L1="🟢"
-[ $D2 -eq 0 ] && L2="🟢"
-[ $D3 -eq 0 ] && L3="🟢"
+declare -A results
+
+for xml in "$REPORTS_DIR"/TEST-*.Dia*Test.xml "$REPORTS_DIR"/TEST-*Test.xml; do
+    [ -f "$xml" ] || continue
+    test_name=$(basename "$xml" .xml | sed 's/^TEST-//')
+    
+    failures=$(grep -o 'failures="[0-9]*"' "$xml" | head -1 | cut -d'"' -f2)
+    errors=$(grep -o 'errors="[0-9]*"' "$xml" | head -1 | cut -d'"' -f2)
+    
+    if [ -z "$failures" ]; then failures=0; fi
+    if [ -z "$errors" ]; then errors=0; fi
+    
+    if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ]; then
+        results["$test_name"]="🟢"
+    else
+        results["$test_name"]="🔴"
+    fi
+done
 
 echo ""
 echo "        *        "
 echo "       /_\\       "
-echo "      /$L1 $L2_\\      "
-echo "     /___$L3___\\     "
-echo "    / $L1   $L2 \\    "
-echo "   /___________\\   "
-echo "        ||       "
-echo "        ||       "
-echo ""
-echo "Día 1: $L1 | Día 2: $L2 | Día 3: $L3"
+
+sorted_keys=($(echo "${!results[@]}" | tr ' ' '\n' | sort))
+
+count=${#sorted_keys[@]}
+if [ $count -eq 0 ]; then
+    echo "     (Sin tests encontrados)"
+else
+    l1=${results[${sorted_keys[0]}]}
+    l2=${results[${sorted_keys[1]}]}
+    l3=${results[${sorted_keys[2]}]}
+    [ -z "$l1" ] && l1="🔴"
+    [ -z "$l2" ] && l2="🔴"
+    [ -z "$l3" ] && l3="🔴"
+
+    echo "      /$l1 $l2_\\      "
+    echo "     /___$l3___\\     "
+    echo "    / $l1   $l2 \\    "
+    echo "   /___________\\   "
+    echo "        ||       "
+    echo "        ||       "
+    echo ""
+    for k in "${sorted_keys[@]}"; do
+        echo "$k: ${results[$k]}"
+    done
+fi
