@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+echo "🎄 Calculando tu progreso navideño..."
+mvn test -Dmaven.test.failure.ignore=true -q
+
+# Evaluamos estado de cada reto ejecutando tests específicos
+# Día 1
+mvn test -Dtest=Dia01Test -q
+D1=$?
+# Día 2
+mvn test -Dtest=Dia02Test -q
+D2=$?
+# Día 3
+mvn test -Dtest=Dia03Test -q
+D3=$?
+
+L1="🔴"
+L2="🔴"
+L3="🔴"
+
+[ $D1 -eq 0 ] && L1="🟢"
+[ $D2 -eq 0 ] && L2="🟢"
+[ $D3 -eq 0 ] && L3="🟢"
+
+echo ""
+echo "        *        "
+echo "       /_\\       "
+echo "      /$L1 $L2_\\      "
+echo "     /___$L3___\\     "
+echo "    / $L1   $L2 \\    "
+echo "   /___________\\   "
+echo "        ||       "
+echo "        ||       "
+echo ""
+echo "Día 1: $L1 | Día 2: $L2 | Día 3: $L3"
