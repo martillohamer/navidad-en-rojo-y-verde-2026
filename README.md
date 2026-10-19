@@ -1,3 +1,3 @@
-# ?? Navidad en Rojo y Verde 2026
+﻿# 🎄 Navidad en Rojo y Verde 2026
 
-Repositorio oficial del calendario de adviento de programaci�n en Java con TDD y perfiles Maven.
+Repositorio oficial del calendario de adviento de programación en Java con TDD y perfiles Maven.
