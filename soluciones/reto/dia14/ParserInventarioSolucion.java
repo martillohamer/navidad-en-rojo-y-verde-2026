@@ -1,7 +1,6 @@
 package reto.dia14;
 
-public class ParserInventario {
-
+public class ParserInventarioSolucion {
     public int extraerStockTotal(String lineaCsv) {
         if (lineaCsv == null || lineaCsv.isEmpty()) return 0;
         String[] partes = lineaCsv.split(",");

@@ -1,9 +1,9 @@
 package reto.dia15;
 
-public class TrineoMagico implements Trineo {
+public class TrineoMagicoSolucion implements Trineo {
     private final int potenciaBase;
 
-    public TrineoMagico(int potenciaBase) {
+    public TrineoMagicoSolucion(int potenciaBase) {
         this.potenciaBase = potenciaBase;
     }
 
