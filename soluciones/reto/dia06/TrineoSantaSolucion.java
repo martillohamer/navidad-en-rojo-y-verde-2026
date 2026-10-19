@@ -1,1 +1,0 @@
-package reto.dia06; public class TrineoSantaSolucion { public String volar(int v) { return v > 50 ? "Rapido" : "Lento"; } }

@@ -1,1 +1,0 @@
-package reto.dia08; public class MotorPoloNorteSolucion { public int calcularEnergia(int b) { return b * 5; } }

@@ -1,1 +1,0 @@
-package reto.dia12; import java.util.List; public class GeneradorInformesSolucion { public int sumarProduccionesAltas(List<Integer> p, int u) { return p.stream().filter(x->x>u).mapToInt(Integer::intValue).sum(); } }

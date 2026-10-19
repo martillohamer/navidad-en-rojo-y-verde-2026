@@ -1,1 +1,0 @@
-package reto.dia04; public class TallerDuendesSolucion { public int calcularProduccion(int h) { if(h<0) throw new InvalidProductionException("Horas negativas"); return h * 10; } }

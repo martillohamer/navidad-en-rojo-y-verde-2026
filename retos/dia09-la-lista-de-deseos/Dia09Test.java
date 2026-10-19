@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class Dia09Test {
     @Test
     public void testContarRegalos() {
-        ListaDeseosSolucion solucion = new ListaDeseosSolucion();
+        ListaDeseos solucion = new ListaDeseos();
         List<String> deseos = Arrays.asList("tren", "muneca", "tren");
         var resultado = solucion.contarRegalos(deseos);
         assertNotNull(resultado);
