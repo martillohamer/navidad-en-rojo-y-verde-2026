@@ -30,7 +30,7 @@ done
 
 echo ""
 echo "        *        "
-echo "       /_\\       "
+echo "       /_\       "
 
 sorted_keys=($(echo "${!results[@]}" | tr ' ' '\n' | sort))
 
@@ -45,10 +45,10 @@ else
     [ -z "$l2" ] && l2="🔴"
     [ -z "$l3" ] && l3="🔴"
 
-    echo "      /$l1 $l2_\\      "
-    echo "     /___$l3___\\     "
-    echo "    / $l1   $l2 \\    "
-    echo "   /___________\\   "
+    echo "      /$l1 $l2_\      "
+    echo "     /___$l3___\     "
+    echo "    / $l1   $l2 \    "
+    echo "   /___________\   "
     echo "        ||       "
     echo "        ||       "
     echo ""
