@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-echo "🎄 Calculando tu progreso navideño..."
-mvn test -Dmaven.test.failure.ignore=true -q > /dev/null 2>&1
+# Progreso navideño dinámico
+set -u
 
-REPORTS_DIR="target/surefire-reports"
+echo "🎄 Calculando tu progreso navideño..."
+
+mvn test -Dmaven.test.failure.ignore=true -q > /dev/null 2>&1 || true
+
+REPORTS_DIR="${REPORTS_DIR:-target/surefire-reports}"
 
 if [ ! -d "$REPORTS_DIR" ]; then
     echo "No se encontraron informes de tests en $REPORTS_DIR. ¿Has ejecutado 'mvn test'?"
@@ -11,48 +15,75 @@ fi
 
 declare -A results
 
-for xml in "$REPORTS_DIR"/TEST-*.Dia*Test.xml "$REPORTS_DIR"/TEST-*Test.xml; do
+for xml in "$REPORTS_DIR"/TEST-*.xml; do
     [ -f "$xml" ] || continue
     test_name=$(basename "$xml" .xml | sed 's/^TEST-//')
+    day=$(printf '%s' "$test_name" | grep -oE 'dia[0-9]+' | head -1)
+    [ -n "$day" ] || continue
     
     failures=$(grep -o 'failures="[0-9]*"' "$xml" | head -1 | cut -d'"' -f2)
     errors=$(grep -o 'errors="[0-9]*"' "$xml" | head -1 | cut -d'"' -f2)
     
-    if [ -z "$failures" ]; then failures=0; fi
-    if [ -z "$errors" ]; then errors=0; fi
+    [ -z "$failures" ] && failures=0
+    [ -z "$errors" ] && errors=0
     
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ]; then
-        results["$test_name"]="🟢"
+        results["$day"]="🟢"
     else
-        results["$test_name"]="🔴"
+        results["$day"]="🔴"
+    fi
+done
+
+days=($(printf '%s\n' "${!results[@]}" | sort))
+n=${#days[@]}
+green=0
+
+for d in "${days[@]}"; do
+    if [ "${results[$d]}" = "🟢" ]; then
+        green=$((green + 1))
     fi
 done
 
 echo ""
-echo "        *        "
-echo "       /_\       "
 
-sorted_keys=($(echo "${!results[@]}" | tr ' ' '\n' | sort))
+# Árbol dinámico
+R=1
+cap=1
+while [ "$cap" -lt "$n" ]; do
+    R=$((R + 1))
+    cap=$((cap + R))
+done
 
-count=${#sorted_keys[@]}
-if [ $count -eq 0 ]; then
-    echo "     (Sin tests encontrados)"
-else
-    l1=${results[${sorted_keys[0]}]}
-    l2=${results[${sorted_keys[1]}]}
-    l3=${results[${sorted_keys[2]}]}
-    [ -z "$l1" ] && l1="🔴"
-    [ -z "$l2" ] && l2="🔴"
-    [ -z "$l3" ] && l3="🔴"
+w=$((2 * R))
+sp=$(printf '%*s' $((w / 2)) "")
+printf '%s*\n' "$sp"
+printf '%s/_\\\n' "$sp"
 
-    echo "      /$l1 $l2_\      "
-    echo "     /___$l3___\     "
-    echo "    / $l1   $l2 \    "
-    echo "   /___________\   "
-    echo "        ||       "
-    echo "        ||       "
-    echo ""
-    for k in "${sorted_keys[@]}"; do
-        echo "$k: ${results[$k]}"
+idx=0
+for ((r=0; r<R; r++)); do
+    s=$((r + 1))
+    pad=$(( (w - 2 * s) / 2 ))
+    line=""
+    for ((k=0; k<s; k++)); do
+        if [ "$idx" -lt "$n" ]; then
+            light="${results[${days[$idx]}]}"
+            idx=$((idx + 1))
+        else
+            light="  "
+        fi
+        if [ "$k" -gt 0 ]; then
+            line="${line} "
+        fi
+        line="${line}${light}"
     done
-fi
+    leftpad="$(printf '%*s' "$pad")"
+    printf '%s%s/%s\\\n' "$leftpad" "" "$line"
+done
+
+printf '\n'
+trunk=$((w - 4))
+trunkpad="$(printf '%*s' $((trunk / 2)) "")"
+printf '%s||\n' "$trunkpad"
+printf '%s||\n' "$trunkpad"
+printf '\n'
+echo "🟢 $green de $n retos resueltos"
