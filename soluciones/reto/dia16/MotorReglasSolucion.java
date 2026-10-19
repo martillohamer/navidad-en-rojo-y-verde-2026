@@ -1,10 +1,1 @@
-package reto.dia16;
-
-public class MotorReglasSolucion {
-    public String evaluarComportamiento(int cartasEnviadas, boolean seHaPortadoBien) {
-        if (seHaPortadoBien && cartasEnviadas > 0) {
-            return "REGALO";
-        }
-        return "CARBON";
-    }
-}
+package reto.dia16; public class MotorReglasSolucion { public String evaluarComportamiento(int c, boolean b) { return (b && c>0) ? "REGALO" : "CARBON"; } }

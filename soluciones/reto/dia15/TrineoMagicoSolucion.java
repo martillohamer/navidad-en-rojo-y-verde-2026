@@ -1,14 +1,1 @@
-package reto.dia15;
-
-public class TrineoMagicoSolucion implements Trineo {
-    private final int potenciaBase;
-
-    public TrineoMagicoSolucion(int potenciaBase) {
-        this.potenciaBase = potenciaBase;
-    }
-
-    @Override
-    public int calcularVelocidadMax() {
-        return this.potenciaBase * 2;
-    }
-}
+package reto.dia15; public class TrineoMagicoSolucion { private final int p; public TrineoMagicoSolucion(int p) { this.p = p; } public int calcularVelocidadMax() { return this.p * 2; } }

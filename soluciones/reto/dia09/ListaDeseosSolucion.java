@@ -1,16 +1,1 @@
-package reto.dia09;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class ListaDeseos {
-
-    public Map<String, Integer> contarRegalos(List<String> deseos) {
-        Map<String, Integer> conteo = new HashMap<>();
-        for (String deseo : deseos) {
-            conteo.put(deseo, conteo.getOrDefault(deseo, 0) + 1);
-        }
-        return conteo;
-    }
-}
+package reto.dia09; import java.util.*; public class ListaDeseosSolucion { public Map<String, Integer> contarRegalos(List<String> d) { Map<String,Integer> m=new HashMap<>(); for(String s:d) m.put(s, m.getOrDefault(s,0)+1); return m; } }

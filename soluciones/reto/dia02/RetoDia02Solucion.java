@@ -1,0 +1,1 @@
+package reto.dia02; public class RetoDia02Solucion { public int calcularRegalos(int a, int b) { return a + b; } }

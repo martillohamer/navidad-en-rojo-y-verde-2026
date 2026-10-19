@@ -1,0 +1,1 @@
+package reto.dia03; public class RetoDia03Solucion { public boolean esApto(int edad) { return edad >= 18; } }

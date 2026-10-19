@@ -1,12 +1,1 @@
-package reto.dia14;
-
-public class ParserInventarioSolucion {
-    public int extraerStockTotal(String lineaCsv) {
-        if (lineaCsv == null || lineaCsv.isEmpty()) return 0;
-        String[] partes = lineaCsv.split(",");
-        if (partes.length >= 2) {
-            return Integer.parseInt(partes[1].trim());
-        }
-        return 0;
-    }
-}
+package reto.dia14; public class ParserInventarioSolucion { public int extraerStockTotal(String l) { return Integer.parseInt(l.split(",")[1].trim()); } }
