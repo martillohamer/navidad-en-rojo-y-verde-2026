@@ -1,4 +1,4 @@
-# &#129302; HANDOFF – Navidad en Rojo y Verde 2026
+# 🤖 HANDOFF – Navidad en Rojo y Verde 2026
 
 Guía técnica para quien retome el proyecto (personas o IAs). Lee esto antes de tocar nada.
 
