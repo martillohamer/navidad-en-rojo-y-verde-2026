@@ -16,14 +16,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Validar Soluciones en Verde
-        run: |
-          mvn -Psoluciones test
-          # Verificar que se ejecutaron tests y no 0
-          if grep -q "Tests run: 0" target/surefire-reports/*.txt 2>/dev/null; then
-            echo "Error: Se ejecutaron 0 tests en validar-soluciones"
-            exit 1
-          fi
+      - name: Comprobar estructura (esqueletos y soluciones emparejados)
+        run: bash scripts/comprobar-estructura
+      - name: Validar soluciones en verde
+        run: mvn -Psoluciones test
 
   progreso:
     runs-on: ubuntu-latest
@@ -34,7 +30,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Ejecutar Tests (Modo Reto Rojo)
+      - name: Ejecutar tests (modo reto, en rojo)
         run: mvn test -Dmaven.test.failure.ignore=true || true
-      - name: Mostrar Progreso
+      - name: Mostrar progreso
         run: ./scripts/progreso
