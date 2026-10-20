@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Comprueba que src/main/java (esqueletos + apoyo) y src/solutions/java (soluciones + apoyo)
+# tienen exactamente los mismos ficheros, que las soluciones ya no lanzan
+# UnsupportedOperationException y que las clases de apoyo son identicas.
+set -u
+RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
+MAIN="$RAIZ/src/main/java"
+SOL="$RAIZ/src/solutions/java"
+errores=0
+
+while IFS= read -r f; do
+    rel="${f#"$MAIN"/}"
+    if [ ! -f "$SOL/$rel" ]; then
+        echo "FALTA la solucion: $rel"
+        errores=$((errores + 1))
+        continue
+    fi
+    if grep -q "UnsupportedOperationException" "$f"; then
+        if grep -q "UnsupportedOperationException" "$SOL/$rel"; then
+            echo "SOLUCION INCOMPLETA (aun lanza UnsupportedOperationException): $rel"
+            errores=$((errores + 1))
+        fi
+    elif ! cmp -s "$f" "$SOL/$rel"; then
+        echo "CLASE DE APOYO DISTINTA entre main y solutions: $rel"
+        errores=$((errores + 1))
+    fi
+done < <(find "$MAIN" -name '*.java' | sort)
+
+while IFS= read -r f; do
+    rel="${f#"$SOL"/}"
+    if [ ! -f "$MAIN/$rel" ]; then
+        echo "SOBRA en soluciones (no hay esqueleto): $rel"
+        errores=$((errores + 1))
+    fi
+done < <(find "$SOL" -name '*.java' | sort)
+
+if [ "$errores" -eq 0 ]; then
+    echo "Estructura correcta: $(find "$MAIN" -name '*.java' | wc -l) ficheros emparejados."
+else
+    echo "$errores problema(s) en la estructura."
+    exit 1
+fi
