@@ -9,6 +9,6 @@ public class TrineoMagico implements Trineo {
 
     @Override
     public int calcularVelocidadMax() {
-        throw new UnsupportedOperationException("Pendiente de implementar por el duende DEV");
+        return potenciaBase * 2; // la magia duplica la potencia
     }
 }
