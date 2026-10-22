@@ -2,7 +2,7 @@
 
 # 🎄 Navidad en Rojo y Verde 2026
 
-**Gimnasio de TDD en Java: 21 retos de lógica que empiezan en rojo y terminan en verde.**
+**Gimnasio de TDD en Java: 22 retos de lógica que empiezan en rojo y terminan en verde.**
 
 [![CI](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
@@ -10,11 +10,11 @@
 ![Build](https://img.shields.io/badge/build-BUILD%20SUCCESS-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 21 retos](#-los-21-retos) · [CI/CD](docs/CI_WORKFLOW.md)
+[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 22 retos](#-los-22-retos) · [CI/CD](docs/CI_WORKFLOW.md)
 
 </div>
 
-Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 21 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
+Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 22 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
 
 El repositorio está pensado para **principiantes absolutos** y todo el material está en castellano. No hay frameworks, ni magia, ni dependencias ocultas: solo Java 21, Maven y JUnit 5.
 
@@ -31,7 +31,7 @@ El repositorio está pensado para **principiantes absolutos** y todo el material
 git clone https://github.com/martillohamer/navidad-en-rojo-y-verde-2026.git
 cd navidad-en-rojo-y-verde-2026
 
-# Compila las implementaciones y ejecuta los 56 tests: 21 retos en verde
+# Compila las implementaciones y ejecuta los 62 tests: 22 retos en verde
 mvn clean test
 ```
 
@@ -76,7 +76,7 @@ navidad-en-rojo-y-verde-2026/
 ├── enunciados/diaNN-nombre/        historia, preguntas, pseudocódigo, pista y reto extra
 ├── scripts/
 │   ├── comprobar-estructura        invariante de simetría y byte-identidad
-│   └── progreso                    árbol navideño con el estado de los 21 retos
+│   └── progreso                    árbol navideño con el estado de los 22 retos
 ├── plantilla-reto/                 plantilla para incorporar un día nuevo
 ├── docs/CI_WORKFLOW.md             contrato de integración continua
 └── pom.xml                         propiedad clases.dir + perfil soluciones
@@ -106,13 +106,13 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 
 | Validación | Comando | Resultado |
 |---|---|---|
-| Suite completa (modo reto) | `mvn clean test` | ✅ 56 tests, 0 fallos |
-| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 56 tests, 0 fallos |
-| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 28 ficheros emparejados |
+| Suite completa (modo reto) | `mvn clean test` | ✅ 62 tests, 0 fallos |
+| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 62 tests, 0 fallos |
+| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 29 ficheros emparejados |
 
 ---
 
-## 📅 Los 21 retos
+## 📅 Los 22 retos
 
 | Día | Reto | Componente principal | Concepto técnico |
 |:---:|---|---|---|
@@ -137,8 +137,9 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 | **19** | El calculador de carga | `CalculadorCarga` | `record Regalo`, acumulación de `double` y excepción personalizada |
 | **20** | Control de calidad | `ControlCalidad` | Streams: `filter`, `groupingBy`, `counting` y `record Juguete` |
 | **21** | El monitor de tormentas | `AlertaTormenta` | Streams: `filter`, `sorted` con `Comparator`, `anyMatch` y umbrales |
+| **22** | El asignador de talleres | `AsignadorTalleres` | Streams: `groupingBy`, `maxBy` y reparto round-robin |
 
-Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El alcance actual son **21 retos**; los días 22-24 todavía no existen.
+Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El alcance actual son **22 retos**; los días 23-24 todavía no existen.
 
 ## 🧪 Comandos de trabajo
 
