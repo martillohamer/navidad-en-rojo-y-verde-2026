@@ -2,7 +2,9 @@ package reto.dia02;
 
 public class RetoDia02 {
 
+    private static final int UMBRAL_ABRIGO = 15;
+
     public String ropaSegunTemperatura(int grados) {
-        throw new UnsupportedOperationException("TODO: Implementa la elección de ropa según la temperatura");
+        return grados < UMBRAL_ABRIGO ? "abrigo" : "camiseta";
     }
 }
