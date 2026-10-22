@@ -49,13 +49,15 @@ class QuantumDashboardServerTest {
     }
 
     @Test
-    void testIndexDevuelveHtml() throws Exception {
+    void testIndexSirveElHtmlRealDelRadar() throws Exception {
         servidor = new QuantumDashboardServer();
         servidor.iniciar();
         HttpResponse<String> r = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_INDEX);
         assertEquals(200, r.statusCode());
         assertTrue(r.headers().firstValue("Content-Type").orElse("").startsWith("text/html"));
-        assertTrue(r.body().contains("Quantum Dashboard"));
+        assertTrue(r.body().contains("RADAR 3D DEL POLO NORTE"));
+        assertTrue(r.body().contains("EventSource('/api/vuelo/stream')"));
+        assertTrue(r.body().contains("three"));
     }
 
     @Test
@@ -68,15 +70,39 @@ class QuantumDashboardServerTest {
     }
 
     @Test
-    void testTelemetriaDevuelveJsonConCampos() throws Exception {
+    void testTelemetriaDevuelveJsonConCamposDelBrief() throws Exception {
         servidor = new QuantumDashboardServer();
         servidor.iniciar();
         HttpResponse<String> r = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_TELEMETRIA);
         assertEquals(200, r.statusCode());
         String cuerpo = r.body();
-        assertTrue(cuerpo.contains("\"nodos\":24"));
-        assertTrue(cuerpo.contains("\"latenciaMs\":"));
-        assertTrue(cuerpo.contains("\"entropia\":"));
+        assertEquals("{\"nodos\":24,\"latencia\":10,\"entropia\":0.5}", cuerpo);
+        assertTrue(r.headers().firstValue("Content-Type").orElse("").contains("application/json"));
+    }
+
+    @Test
+    void testStreamSseRespondeConCabecerasYEvento() throws Exception {
+        servidor = new QuantumDashboardServer(0);
+        servidor.iniciar();
+        HttpClient cliente = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+        HttpRequest peticion = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + servidor.puerto() + QuantumDashboardServer.RUTA_STREAM))
+                .timeout(Duration.ofSeconds(3)).GET().build();
+        HttpResponse<String> r = cliente.send(peticion, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, r.statusCode());
+        assertTrue(r.headers().firstValue("Content-Type").orElse("").startsWith("text/event-stream"));
+        assertTrue(r.body().contains("\"secuencia\":"));
+        assertTrue(r.body().contains("\"velocidadKmh\":"));
+    }
+
+    @Test
+    void testSiguienteMuestraAvanzaLaSecuencia() throws IOException {
+        servidor = new QuantumDashboardServer();
+        QuantumDashboardServer.Telemetria m1 = servidor.siguienteMuestra();
+        QuantumDashboardServer.Telemetria m2 = servidor.siguienteMuestra();
+        assertEquals(1, m1.secuencia());
+        assertEquals(2, m2.secuencia());
+        assertTrue(m1.comoEventoSse().endsWith("\n\n"));
     }
 
     @Test
