@@ -1,0 +1,58 @@
+name: Certificado de Vuelo del Polo Norte
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  certificado-de-vuelo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Validar la suite completa (77 tests)
+        run: mvn clean test
+
+      - name: Emitir el Certificado de Vuelo Oficial
+        if: success()
+        run: |
+          mkdir -p certificado
+          COMMIT="$(git rev-parse HEAD)"
+          FECHA="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          cat > certificado/certificado-de-vuelo.txt <<EOF
+          ============================================================
+                    CERTIFICADO DE VUELO OFICIAL DEL POLO NORTE
+          ============================================================
+
+            Se certifica que el proyecto
+
+              navidad-en-rojo-y-verde-2026
+
+            ha superado con exito los 77 tests de la suite completa
+            (24 retos de Nochebuena) y esta autorizado para el gran
+            despegue.
+
+            Commit : ${COMMIT}
+            Fecha  : ${FECHA}
+            Estado : DESPEGUE AUTORIZADO
+
+            --- Centro de Mando del Polo Norte ---
+          ============================================================
+          EOF
+          echo "Certificado generado:"
+          cat certificado/certificado-de-vuelo.txt
+
+      - name: Publicar el Certificado de Vuelo
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certificado-de-vuelo-polo-norte
+          path: certificado/certificado-de-vuelo.txt
