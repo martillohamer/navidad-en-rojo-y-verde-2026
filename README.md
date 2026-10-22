@@ -2,7 +2,7 @@
 
 # 🎄 Navidad en Rojo y Verde 2026
 
-**Gimnasio de TDD en Java: 23 retos de lógica que empiezan en rojo y terminan en verde.**
+**Gimnasio de TDD en Java: 24 retos de lógica que empiezan en rojo y terminan en verde.**
 
 [![CI](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
@@ -10,11 +10,11 @@
 ![Build](https://img.shields.io/badge/build-BUILD%20SUCCESS-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 23 retos](#-los-23-retos) · [CI/CD](docs/CI_WORKFLOW.md)
+[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 24 retos](#-los-24-retos) · [CI/CD](docs/CI_WORKFLOW.md)
 
 </div>
 
-Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 23 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
+Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 24 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
 
 El repositorio está pensado para **principiantes absolutos** y todo el material está en castellano. No hay frameworks, ni magia, ni dependencias ocultas: solo Java 21, Maven y JUnit 5.
 
@@ -31,7 +31,7 @@ El repositorio está pensado para **principiantes absolutos** y todo el material
 git clone https://github.com/martillohamer/navidad-en-rojo-y-verde-2026.git
 cd navidad-en-rojo-y-verde-2026
 
-# Compila las implementaciones y ejecuta los 71 tests: 23 retos en verde
+# Compila las implementaciones y ejecuta los 77 tests: 24 retos en verde (¡calendario completo!)
 mvn clean test
 ```
 
@@ -76,7 +76,7 @@ navidad-en-rojo-y-verde-2026/
 ├── enunciados/diaNN-nombre/        historia, preguntas, pseudocódigo, pista y reto extra
 ├── scripts/
 │   ├── comprobar-estructura        invariante de simetría y byte-identidad
-│   └── progreso                    árbol navideño con el estado de los 23 retos
+│   └── progreso                    árbol navideño con el estado de los 24 retos
 ├── plantilla-reto/                 plantilla para incorporar un día nuevo
 ├── docs/CI_WORKFLOW.md             contrato de integración continua
 └── pom.xml                         propiedad clases.dir + perfil soluciones
@@ -106,13 +106,13 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 
 | Validación | Comando | Resultado |
 |---|---|---|
-| Suite completa (modo reto) | `mvn clean test` | ✅ 71 tests, 0 fallos |
-| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 71 tests, 0 fallos |
-| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 30 ficheros emparejados |
+| Suite completa (modo reto) | `mvn clean test` | ✅ 77 tests, 0 fallos |
+| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 77 tests, 0 fallos |
+| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 31 ficheros emparejados |
 
 ---
 
-## 📅 Los 23 retos
+## 📅 Los 24 retos
 
 | Día | Reto | Componente principal | Concepto técnico |
 |:---:|---|---|---|
@@ -139,8 +139,9 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 | **21** | El monitor de tormentas | `AlertaTormenta` | Streams: `filter`, `sorted` con `Comparator`, `anyMatch` y umbrales |
 | **22** | El asignador de talleres | `AsignadorTalleres` | Streams: `groupingBy`, `maxBy` y reparto round-robin |
 | **23** | La compresión de historiales | `CompresorRegalos` | Compresión RLE, escape de caracteres y reversibilidad |
+| **24** | El simulador del gran despegue | `SimuladorNavidad` | Orquestación de clases, `record InformeMision` y lógica combinada |
 
-Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El alcance actual son **23 retos**; el día 24 todavía no existe.
+Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El calendario está **completo**: los **24 retos** están disponibles.
 
 ## 🧪 Comandos de trabajo
 
