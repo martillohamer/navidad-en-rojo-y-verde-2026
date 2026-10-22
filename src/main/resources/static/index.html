@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar 3D del Polo Norte - Telemetria en Vivo</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #05010f; color: #eaf6ff;
+      font-family: "Segoe UI", system-ui, sans-serif; }
+    #panel { position: absolute; top: 12px; left: 12px; padding: 12px 16px; border-radius: 12px;
+      background: rgba(10, 4, 30, 0.7); border: 1px solid #c81f2f; backdrop-filter: blur(6px);
+      font-size: 14px; line-height: 1.5; }
+    #panel h1 { margin: 0 0 8px; font-size: 16px; color: #2ee66b; letter-spacing: 1px; }
+    #panel .dato { color: #ffd34d; }
+    #estado { margin-top: 6px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <h1>RADAR 3D DEL POLO NORTE</h1>
+    <div>Secuencia: <span class="dato" id="secuencia">-</span></div>
+    <div>Latitud: <span class="dato" id="latitud">-</span></div>
+    <div>Longitud: <span class="dato" id="longitud">-</span></div>
+    <div>Altitud: <span class="dato" id="altitud">-</span></div>
+    <div>Velocidad: <span class="dato" id="velocidad">-</span> km/h</div>
+    <div id="estado">Conectando al stream SSE...</div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const escena = new THREE.Scene();
+    escena.background = new THREE.Color(0x05010f);
+
+    const camara = new THREE.PerspectiveCamera(
+      55, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camara.position.set(0, 60, 220);
+
+    const renderizador = new THREE.WebGLRenderer({ antialias: true });
+    renderizador.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderizador.domElement);
+
+    escena.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const sol = new THREE.DirectionalLight(0xffffff, 1.2);
+    sol.position.set(120, 120, 120);
+    escena.add(sol);
+
+    const tierra = new THREE.Mesh(
+      new THREE.SphereGeometry(80, 64, 64),
+      new THREE.MeshStandardMaterial({ color: 0x1b6e3a, emissive: 0x06210f, roughness: 0.85 }));
+    escena.add(tierra);
+
+    const grilla = new THREE.Mesh(
+      new THREE.SphereGeometry(80.5, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xff2b3d, wireframe: true, transparent: true, opacity: 0.12 }));
+    escena.add(grilla);
+
+    const trineo = new THREE.Mesh(
+      new THREE.ConeGeometry(3, 10, 8),
+      new THREE.MeshStandardMaterial({ color: 0xffd34d, emissive: 0xff8c00 }));
+    escena.add(trineo);
+
+    const estela = [];
+    const ESTELA_MAX = 240;
+
+    function latLonA3D(lat, lon, altitud) {
+      const radio = 80 + (altitud / 1000) * 8;
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+      return new THREE.Vector3(
+        radio * Math.sin(phi) * Math.cos(theta),
+        radio * Math.cos(phi),
+        radio * Math.sin(phi) * Math.sin(theta));
+    }
+
+    function actualizarPanel(d) {
+      document.getElementById('secuencia').textContent = d.secuencia;
+      document.getElementById('latitud').textContent = d.latitud.toFixed(2);
+      document.getElementById('longitud').textContent = d.longitud.toFixed(2);
+      document.getElementById('altitud').textContent = d.altitud.toFixed(0);
+      document.getElementById('velocidad').textContent = d.velocidadKmh.toFixed(0);
+      document.getElementById('estado').textContent = 'Senal SSE activa';
+    }
+
+    function conectar() {
+      const fuente = new EventSource('/api/vuelo/stream');
+      fuente.onmessage = (evento) => {
+        const d = JSON.parse(evento.data);
+        actualizarPanel(d);
+        const pos = latLonA3D(d.latitud, d.longitud, d.altitud);
+        trineo.position.copy(pos);
+        trineo.lookAt(0, 0, 0);
+        const punto = new THREE.Mesh(
+          new THREE.SphereGeometry(0.8, 8, 8),
+          new THREE.MeshBasicMaterial({ color: 0x2ee66b }));
+        punto.position.copy(pos);
+        escena.add(punto);
+        estela.push(punto);
+        if (estela.length > ESTELA_MAX) {
+          escena.remove(estela.shift());
+        }
+      };
+      fuente.onerror = () => {
+        document.getElementById('estado').textContent = 'Reconectando...';
+      };
+    }
+
+    function animar() {
+      requestAnimationFrame(animar);
+      tierra.rotation.y += 0.0006;
+      grilla.rotation.y += 0.0006;
+      renderizador.render(escena, camara);
+    }
+
+    window.addEventListener('resize', () => {
+      camara.aspect = window.innerWidth / window.innerHeight;
+      camara.updateProjectionMatrix();
+      renderizador.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    conectar();
+    animar();
+  </script>
+</body>
+</html>
