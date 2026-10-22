@@ -6,10 +6,9 @@ Guía técnica para quien retome el proyecto (personas o IAs). Lee esto antes de
 Adviento de retos de lógica en Java para principiantes, en castellano. Cada día = un test en rojo que el alumno pone en verde. Repositorio: `github.com/martillohamer/navidad-en-rojo-y-verde-2026`.
 
 ## Estado actual
-- **23 de 24 retos completados** (días 1 a 23): reto implementado en `src/main/java`, test y solución de referencia en `src/solutions/java`; suite completa en verde ✅.
-- Expansión al calendario extendido en curso: **Día 23 integrado** ✅, avanzando hacia el gran final del Día 24 ⏳.
-- Día 24: **todavía no existe** ⏳.
-- Enunciados: los 23 días tienen enunciado completo (historia, preguntas de razonamiento, pseudocódigo, pista plegable, ruta del fichero, comando de test y reto extra).
+- **Proyecto completo: 24 de 24 retos terminados** 🎉. Todos los días implementados en `src/main/java`, con test y solución de referencia en `src/solutions/java`; suite completa en verde ✅.
+- La expansión al calendario extendido ha concluido con éxito rotundo: los días 17 a 24 están integrados y el callejón de retos está cerrado.
+- Enunciados: los 24 días tienen enunciado completo (historia, preguntas de razonamiento, pseudocódigo, pista plegable, ruta del fichero, comando de test y reto extra).
 
 ## Stack
 Java 21, Maven, JUnit 5 (5.10.2), GitHub Actions. Sin más dependencias.
