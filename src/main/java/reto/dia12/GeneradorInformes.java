@@ -5,6 +5,9 @@ import java.util.List;
 public class GeneradorInformes {
 
     public int sumarProduccionesAltas(List<Integer> producciones, int umbral) {
-        throw new UnsupportedOperationException("Pendiente de implementar por el duende DEV");
+        return producciones.stream()
+                .filter(p -> p > umbral)
+                .mapToInt(Integer::intValue)
+                .sum();
     }
 }
