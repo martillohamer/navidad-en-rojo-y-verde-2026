@@ -1,11 +1,10 @@
 package reto.dia02;
 
 public class RetoDia02 {
-    // Una condicion decide: menos de 15 grados -> abrigo, si no -> camiseta
+
+    private static final int UMBRAL_ABRIGO = 15;
+
     public String ropaSegunTemperatura(int grados) {
-        if (grados < 15) {
-            return "abrigo";
-        }
-        return "camiseta";
+        return grados < UMBRAL_ABRIGO ? "abrigo" : "camiseta";
     }
 }
