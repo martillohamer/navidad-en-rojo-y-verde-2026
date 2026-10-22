@@ -13,6 +13,8 @@
       --neo-soft: rgba(0, 255, 204, 0.5);
       --neo-glass: rgba(0, 255, 204, 0.06);
       --rojo: #ff2b3d;
+      --carmesi: #ff1e42;
+      --oro: #ffd700;
       --ambar: #ffd34d;
       --magenta: #ff4fd8;
       --fondo: #01050a;
@@ -109,9 +111,18 @@
       font-weight: 800;
       font-size: clamp(14px, 2vw, 21px);
       letter-spacing: 4px;
-      color: var(--neo);
-      text-shadow: 0 0 14px var(--neo-soft), 0 0 30px rgba(0, 255, 204, 0.25);
+      background: linear-gradient(90deg, var(--neo) 0%, var(--oro) 55%, var(--carmesi) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 14px rgba(0, 255, 204, 0.35)) drop-shadow(0 0 22px rgba(255, 30, 66, 0.3));
       white-space: nowrap;
+    }
+
+    header.panel {
+      box-shadow: 0 0 26px rgba(0, 255, 204, 0.14),
+                  0 0 40px rgba(255, 30, 66, 0.12),
+                  inset 0 0 20px rgba(255, 215, 0, 0.05);
     }
 
     .badge {
@@ -157,8 +168,9 @@
       font-family: 'Orbitron', sans-serif;
       font-size: 11px;
       letter-spacing: 3px;
-      color: var(--neo);
-      opacity: 0.85;
+      color: var(--oro);
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.45);
+      opacity: 0.9;
       margin-bottom: 4px;
     }
 
@@ -285,6 +297,46 @@
 
     #toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ---------- TOOLTIP 3D ---------- */
+    #tooltip3d {
+      top: 0;
+      left: 0;
+      width: 214px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      border-color: rgba(255, 215, 0, 0.45);
+      box-shadow: 0 0 30px rgba(255, 30, 66, 0.35), inset 0 0 18px rgba(255, 215, 0, 0.08);
+    }
+
+    #tooltip3d.visible { opacity: 1; }
+
+    #tooltip3d h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--oro);
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+      padding-bottom: 7px;
+    }
+
+    .tt-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .tt-clave { font-size: 9px; letter-spacing: 1.5px; opacity: 0.55; }
+    .tt-valor {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .tt-cian { color: var(--neo); text-shadow: 0 0 10px var(--neo-soft); }
+    .tt-oro { color: var(--oro); text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+    .tt-rojo { color: var(--rojo); text-shadow: 0 0 10px rgba(255, 30, 66, 0.7); }
+    .tt-nota { font-size: 8.5px; letter-spacing: 1px; opacity: 0.4; margin-top: 3px; }
+
     /* ---------- LOADER ---------- */
     #carga {
       position: fixed;
@@ -365,6 +417,14 @@
 
   <div id="toast"></div>
 
+  <div id="tooltip3d" class="panel">
+    <h3>TRINEO DE SANTA</h3>
+    <div class="tt-fila"><span class="tt-clave">ESTADO</span><span class="tt-valor tt-cian">EN VUELO</span></div>
+    <div class="tt-fila"><span class="tt-clave">REGALOS</span><span class="tt-valor tt-oro">1,450,230</span></div>
+    <div class="tt-fila"><span class="tt-clave">MAGIA ACTIVA</span><span class="tt-valor tt-rojo">99.8%</span></div>
+    <p class="tt-nota">Haz clic de nuevo para cerrar</p>
+  </div>
+
   <div id="carga">
     <div class="anillo"></div>
     <p>INICIALIZANDO ESTACION TACTICA</p>
@@ -434,6 +494,23 @@
         nota(base, 0.09, 'sine', 0.06);
         nota(base * 1.5, 0.09, 'sine', 0.035, c.currentTime + 0.03);
       }
+      function campanillas(intensidad) {
+        const c = asegurar();
+        if (!c || !activo) return;
+        const vol = (intensidad || 1) * 0.05;
+        const t = c.currentTime;
+        [2093, 2637, 3136, 3520].forEach((f, i) => {
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, t + i * 0.045);
+          g.gain.setValueAtTime(0.0001, t + i * 0.045);
+          g.gain.exponentialRampToValueAtTime(vol, t + i * 0.045 + 0.006);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.045 + 0.42);
+          osc.connect(g); g.connect(maestro);
+          osc.start(t + i * 0.045); osc.stop(t + i * 0.045 + 0.5);
+        });
+      }
       function error() { enganchar(); nota(220, 0.25, 'sawtooth', 0.10); }
 
       function pad() {
@@ -476,7 +553,7 @@
       }
 
       function estaActivo() { return activo; }
-      return { hover, click, beep, error, alternar, estaActivo, enganchar };
+      return { hover, click, beep, campanillas, error, alternar, estaActivo, enganchar };
     })();
 
     /* ===================== ESCENA 3D ===================== */
@@ -604,31 +681,179 @@
     const polvo = crearAnillo(360, 1500, 2.0, 0x9fe8ff, Math.PI / 3.2);
     escena.add(polvo);
 
-    /* Trineo indicador */
-    const trineo = new THREE.Mesh(
-      new THREE.ConeGeometry(3.2, 11, 12),
-      new THREE.MeshStandardMaterial({ color: 0xffd34d, emissive: 0xff7a00, emissiveIntensity: 1.0 }));
-    trineo.castShadow = true;
+    /* ===== Trineo navideño realista de grado AAA ===== */
+    const trineo = new THREE.Group();
+
+    const matCuerpo = new THREE.MeshStandardMaterial({
+      color: 0xff1e42, emissive: 0x5c000f, emissiveIntensity: 0.32,
+      roughness: 0.18, metalness: 0.9
+    });
+    const matOro = new THREE.MeshStandardMaterial({
+      color: 0xffd700, emissive: 0x6b4e00, emissiveIntensity: 0.45,
+      roughness: 0.16, metalness: 1.0
+    });
+
+    /* --- Perfil lateral clasico: fondo plano, respaldo alto, proa en gancho --- */
+    function crearPerfilCasco(escala) {
+      const s = new THREE.Shape();
+      s.moveTo(-6.2, 0.0);
+      s.lineTo(5.4, 0.0);
+      s.quadraticCurveTo(6.6, 0.0, 7.0, 0.9);
+      s.quadraticCurveTo(7.6, 2.0, 7.4, 3.0);
+      s.quadraticCurveTo(7.1, 4.2, 6.0, 4.35);
+      s.quadraticCurveTo(4.9, 4.5, 4.7, 3.6);
+      s.quadraticCurveTo(4.6, 3.05, 5.2, 2.9);
+      s.lineTo(5.0, 1.0);
+      s.lineTo(-5.4, 1.0);
+      s.lineTo(-5.9, 5.4);
+      s.quadraticCurveTo(-6.9, 6.0, -7.4, 5.2);
+      s.quadraticCurveTo(-7.9, 4.3, -6.9, 3.7);
+      s.lineTo(-6.2, 3.7);
+      s.closePath();
+      return s;
+    }
+
+    const profundidad = 7.6;
+    const casco = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(crearPerfilCasco(), {
+        depth: profundidad, bevelEnabled: true, bevelThickness: 0.16,
+        bevelSize: 0.16, bevelSegments: 3, curveSegments: 14
+      }),
+      matCuerpo);
+    casco.position.z = -profundidad / 2;
+    casco.castShadow = true;
+    casco.receiveShadow = true;
+    trineo.add(casco);
+
+    /* --- Ribete dorado en todo el perimetro superior (silueta extruida) --- */
+    const perfilPuntos = crearPerfilCasco().getPoints(40);
+    function bordeTubo(puntos, z, radio) {
+      const curva = new THREE.CatmullRomCurve3(puntos.map(p => new THREE.Vector3(p.x, p.y, z)), false, 'catmullrom', 0.05);
+      return new THREE.Mesh(new THREE.TubeGeometry(curva, puntos.length * 2, radio, 8, false), matOro);
+    }
+    trineo.add(bordeTubo(perfilPuntos, profundidad / 2 + 0.02, 0.3),
+      bordeTubo(perfilPuntos, -profundidad / 2 - 0.02, 0.3));
+
+    /* --- Patines clasicos con CubicBezierCurve3 + TubeGeometry --- */
+    function crearPatin(desplazZ) {
+      const patin = new THREE.Group();
+      const curva = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(-6.6, -1.0, 0),
+        new THREE.Vector3(1.4, -1.4, 0),
+        new THREE.Vector3(6.4, -1.4, 0),
+        new THREE.Vector3(7.9, 2.6, 0));
+      const runner = new THREE.Mesh(new THREE.TubeGeometry(curva, 42, 0.34, 10, false), matOro);
+      runner.castShadow = true;
+      patin.add(runner);
+
+      [-4.6, 0, 4.4].forEach(x => {
+        const muestra = curva.getPoint((x + 6.6) / 14.5);
+        const puntal = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.2, 8), matOro);
+        puntal.position.set(x, muestra.y + 1.1, 0);
+        patin.add(puntal);
+      });
+
+      patin.position.z = desplazZ;
+      return patin;
+    }
+    const patinIzq = crearPatin(profundidad / 2 - 0.4);
+    const patinDer = crearPatin(-profundidad / 2 + 0.4);
+    trineo.add(patinIzq, patinDer);
+
+    /* --- Carga: cajas de regalo apiladas con lazos cruzados --- */
+    const CAJA_ESTILOS = [
+      { cuerpo: 0x1fa84a, cinta: 0xffffff },
+      { cuerpo: 0x1e5cff, cinta: 0xffd700 },
+      { cuerpo: 0xffd700, cinta: 0xff1e42 },
+      { cuerpo: 0xf4f8ff, cinta: 0xff1e42 },
+      { cuerpo: 0xff1e42, cinta: 0xffffff },
+      { cuerpo: 0x1fa84a, cinta: 0xffd700 }
+    ];
+    const regalos = [];
+    let semillaRegalo = 7;
+    function pseudoaleatorio() { semillaRegalo = (semillaRegalo * 16807) % 2147483647; return semillaRegalo / 2147483647; }
+
+    function crearCajaRegalo(lado, estilo) {
+      const caja = new THREE.Group();
+      const altura = lado * (0.8 + pseudoaleatorio() * 0.3);
+      const cubo = new THREE.Mesh(
+        new THREE.BoxGeometry(lado, altura, lado),
+        new THREE.MeshStandardMaterial({
+          color: estilo.cuerpo, roughness: 0.45, metalness: 0.15,
+          emissive: estilo.cuerpo, emissiveIntensity: 0.12
+        }));
+      cubo.castShadow = true;
+      cubo.receiveShadow = true;
+      caja.add(cubo);
+
+      const matCinta = new THREE.MeshStandardMaterial({
+        color: estilo.cinta, roughness: 0.25, metalness: 0.55,
+        emissive: estilo.cinta, emissiveIntensity: 0.28
+      });
+      const anchoCinta = lado * 0.16;
+      const cinta1 = new THREE.Mesh(new THREE.BoxGeometry(anchoCinta, altura + 0.06, lado + 0.08), matCinta);
+      const cinta2 = new THREE.Mesh(new THREE.BoxGeometry(lado + 0.08, altura + 0.06, anchoCinta), matCinta);
+      caja.add(cinta1, cinta2);
+
+      const lazo = new THREE.Mesh(new THREE.TorusGeometry(lado * 0.2, anchoCinta * 0.55, 8, 16), matCinta);
+      lazo.rotation.x = Math.PI / 2;
+      lazo.position.y = altura / 2 + 0.1;
+      caja.add(lazo);
+
+      caja.userData.altura = altura;
+      return caja;
+    }
+
+    const DISPOSICION = [
+      [-2.6, 0, -1.9, 1.7], [-0.6, 0, -2.0, 1.9], [1.6, 0, -1.8, 1.6],
+      [-1.7, 0, 0.6, 1.8], [0.9, 0, 0.4, 1.5], [-0.2, 0, 2.1, 1.4]
+    ];
+    DISPOSICION.forEach((d, i) => {
+      const [x, , z, lado] = d;
+      const caja = crearCajaRegalo(lado, CAJA_ESTILOS[i % CAJA_ESTILOS.length]);
+      caja.position.set(x, caja.userData.altura / 2 + 1.05, z);
+      caja.rotation.y = (pseudoaleatorio() - 0.5) * 0.5;
+      regalos.push(caja);
+      trineo.add(caja);
+    });
+    const cajaTope = crearCajaRegalo(1.3, CAJA_ESTILOS[0]);
+    cajaTope.position.set(-0.4, cajaTope.userData.altura / 2 + 2.9, -0.6);
+    cajaTope.rotation.y = 0.3;
+    regalos.push(cajaTope);
+    trineo.add(cajaTope);
+
+    /* Asiento trasero elevado */
+    const asiento = new THREE.Mesh(
+      new THREE.BoxGeometry(4.8, 0.6, profundidad * 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x7a0018, roughness: 0.6, metalness: 0.3 }));
+    asiento.position.set(-4.0, 1.35, 0);
+    asiento.castShadow = true;
+    trineo.add(asiento);
+
     escena.add(trineo);
 
-    const auraTrineo = new THREE.PointLight(0xffd34d, 1.1, 90);
-    escena.add(auraTrineo);
+    const luzNavidad = new THREE.PointLight(0xff1e42, 1.6, 190);
+    const luzOro = new THREE.PointLight(0xffd700, 1.2, 160);
+    escena.add(luzNavidad, luzOro);
 
-    /* Estela de plasma (pool de particulas reutilizables) */
+    /* Estela de plasma dual: rojo fuego + oro estelar */
     const capaEstela = new THREE.Group();
     escena.add(capaEstela);
     const MAX_ESTELA = 160;
     const geoPunto = new THREE.SphereGeometry(0.85, 8, 8);
-    const poolEstela = [];
-    function obtenerPunto() {
-      let p = poolEstela.find(x => !x.visible);
+    const COLOR_ESTELA = [0xff1e42, 0xffd700];
+    const poolsEstela = [[], []];
+    let contadorEstela = 0;
+    function obtenerPunto(colorIdx) {
+      const pool = poolsEstela[colorIdx];
+      let p = pool.find(x => !x.visible);
       if (!p) {
         p = new THREE.Mesh(geoPunto, new THREE.MeshBasicMaterial({
-          color: 0x00ffcc, transparent: true, opacity: 0.95,
+          color: COLOR_ESTELA[colorIdx], transparent: true, opacity: 0.95,
           blending: THREE.AdditiveBlending
         }));
         capaEstela.add(p);
-        poolEstela.push(p);
+        pool.push(p);
       }
       p.visible = true;
       p.material.opacity = 0.95;
@@ -636,18 +861,21 @@
       return p;
     }
     function pintarPunto(pos) {
-      const p = obtenerPunto();
+      const p = obtenerPunto(contadorEstela % 2);
+      contadorEstela++;
       p.position.copy(pos);
       p.scale.setScalar(1);
     }
 
     function actualizarEstela(dt) {
-      for (const p of poolEstela) {
-        if (!p.visible) continue;
-        p.userData.vida -= dt * 0.45;
-        if (p.userData.vida <= 0) { p.visible = false; continue; }
-        p.material.opacity = 0.95 * p.userData.vida;
-        p.scale.setScalar(0.4 + p.userData.vida);
+      for (const pool of poolsEstela) {
+        for (const p of pool) {
+          if (!p.visible) continue;
+          p.userData.vida -= dt * 0.45;
+          if (p.userData.vida <= 0) { p.visible = false; continue; }
+          p.material.opacity = 0.95 * p.userData.vida;
+          p.scale.setScalar(0.4 + p.userData.vida);
+        }
       }
     }
 
@@ -706,9 +934,11 @@
         const pos = latLonA3D(d.latitud, d.longitud, d.altitud);
         trineo.position.copy(pos);
         trineo.lookAt(0, 0, 0);
-        auraTrineo.position.copy(pos);
+        luzNavidad.position.copy(pos);
+        luzOro.position.copy(pos).add(new THREE.Vector3(6, -4, 6));
         pintarPunto(pos);
         MotorAudio.beep();
+        MotorAudio.campanillas(0.8);
       };
       fuente.onerror = () => {
         badge.classList.add('offline');
@@ -720,7 +950,7 @@
     const botones = document.querySelectorAll('button.cyber');
     botones.forEach(b => {
       b.addEventListener('mouseenter', () => MotorAudio.hover());
-      b.addEventListener('click', () => MotorAudio.click());
+      b.addEventListener('click', () => { MotorAudio.click(); MotorAudio.campanillas(0.9); });
     });
 
     const posInicial = new THREE.Vector3(0, 78, 250);
@@ -774,9 +1004,48 @@
     sincronizarAudio();
 
     document.getElementById('btnLimpiar').addEventListener('click', () => {
-      poolEstela.forEach(p => { p.visible = false; p.userData.vida = 0; });
+      poolsEstela.forEach(pool => pool.forEach(p => { p.visible = false; p.userData.vida = 0; }));
       mostrarToast('Rastro de vuelo reiniciado');
     });
+
+    /* ===================== INTERACTIVIDAD (RAYCASTING) ===================== */
+    const raycaster = new THREE.Raycaster();
+    const puntero = new THREE.Vector2();
+    const tooltip = document.getElementById('tooltip3d');
+    let tooltipVisible = false;
+
+    function mostrarTooltip() {
+      tooltip.classList.add('visible');
+      tooltipVisible = true;
+      MotorAudio.campanillas(1.1);
+    }
+    function ocultarTooltip() {
+      tooltip.classList.remove('visible');
+      tooltipVisible = false;
+    }
+
+    renderizador.domElement.addEventListener('pointerdown', (ev) => {
+      const rect = renderizador.domElement.getBoundingClientRect();
+      puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+      puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(puntero, camara);
+      const impactos = raycaster.intersectObject(trineo, true);
+      if (impactos.length > 0) {
+        if (tooltipVisible) ocultarTooltip(); else mostrarTooltip();
+      } else if (tooltipVisible) {
+        ocultarTooltip();
+      }
+    });
+
+    function posicionarTooltip() {
+      if (!tooltipVisible) return;
+      const v = trineo.position.clone();
+      v.y += 14;
+      v.project(camara);
+      const x = (v.x * 0.5 + 0.5) * innerWidth;
+      const y = (-v.y * 0.5 + 0.5) * innerHeight;
+      tooltip.style.transform = 'translate(' + (x + 18) + 'px,' + (y - 40) + 'px)';
+    }
 
     addEventListener('resize', () => {
       camara.aspect = innerWidth / innerHeight;
@@ -815,6 +1084,7 @@
       matEstrellas.opacity = 0.65 + Math.sin(t * 2.0) * 0.2;
 
       actualizarEstela(dt);
+      posicionarTooltip();
       controles.update();
       renderizador.render(escena, camara);
     }
