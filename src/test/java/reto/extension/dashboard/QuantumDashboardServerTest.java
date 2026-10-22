@@ -61,6 +61,31 @@ class QuantumDashboardServerTest {
     }
 
     @Test
+    void testNexusSirveElHtmlDelDashboardNexusOps() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> r = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_NEXUS);
+        assertEquals(200, r.statusCode());
+        assertTrue(r.headers().firstValue("Content-Type").orElse("").startsWith("text/html"));
+        assertTrue(r.body().contains("NEXUS OPS"));
+        assertTrue(r.body().contains("INYECCION DE CAOS"));
+        assertTrue(r.body().contains("EventSource('/api/vuelo/stream')"));
+    }
+
+    @Test
+    void testIndexYNexusConvivenEnElMismoPuerto() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> index = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_INDEX);
+        HttpResponse<String> nexus = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_NEXUS);
+        assertEquals(200, index.statusCode());
+        assertEquals(200, nexus.statusCode());
+        assertTrue(index.body().contains("RADAR 3D DEL POLO NORTE"));
+        assertTrue(nexus.body().contains("NEXUS OPS"));
+        assertFalse(index.body().equals(nexus.body()));
+    }
+
+    @Test
     void testHealthDevuelveOk() throws Exception {
         servidor = new QuantumDashboardServer();
         servidor.iniciar();

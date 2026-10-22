@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusOps — Dashboard de Telemetria de Agentes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cian: #00ffcc;
+      --cian-soft: rgba(0, 255, 204, 0.5);
+      --rojo: #ff2b3d;
+      --carmesi: #ff1e42;
+      --oro: #ffd700;
+      --verde: #2fe08a;
+      --ambar: #ffb340;
+      --fondo: #05070d;
+      --glass: rgba(10, 16, 26, 0.62);
+      --borde: rgba(0, 255, 204, 0.28);
+      --texto: #cdd9e6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: radial-gradient(circle at 20% 10%, #0b1626 0%, #05070d 60%);
+      color: var(--texto);
+      font-family: 'Fira Code', ui-monospace, monospace;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg,
+        rgba(0, 255, 204, 0.03) 0px, rgba(0, 255, 204, 0.03) 1px,
+        transparent 1px, transparent 4px);
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    header.barra {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 22px;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 32px rgba(0, 255, 204, 0.12);
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: clamp(15px, 1.8vw, 22px);
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, var(--cian), var(--oro) 60%, var(--carmesi));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .barra-acciones { display: flex; align-items: center; gap: 14px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--cian);
+      border: 1px solid var(--borde);
+      border-radius: 999px;
+      padding: 6px 15px;
+    }
+
+    .badge .pulso {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--cian);
+      box-shadow: 0 0 10px var(--cian);
+      animation: latido 1.3s ease-in-out infinite;
+    }
+
+    .badge.offline { color: var(--rojo); border-color: rgba(255, 43, 61, 0.45); }
+    .badge.offline .pulso { background: var(--rojo); animation-duration: 0.5s; }
+
+    @keyframes latido { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    .nav-link {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-decoration: none;
+      color: var(--oro);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 4px;
+      padding: 7px 14px;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover { background: var(--oro); color: #101005; box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
+
+    .rejilla {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 0.9fr;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 26px rgba(0, 255, 204, 0.1), inset 0 0 22px rgba(0, 255, 204, 0.04);
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--cian);
+      padding: 13px 16px;
+      border-bottom: 1px solid rgba(0, 255, 204, 0.18);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel h2 .contador {
+      font-size: 10px;
+      color: var(--oro);
+      letter-spacing: 1px;
+    }
+
+    /* Grafo de nodos */
+    #grafo { flex: 1; position: relative; min-height: 0; }
+    #grafo canvas { display: block; width: 100%; height: 100%; }
+
+    .nodo-leyenda {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      opacity: 0.5;
+      line-height: 1.7;
+    }
+
+    /* Consola de eventos */
+    #consola {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      font-size: 11px;
+      line-height: 1.85;
+      min-height: 0;
+    }
+
+    .evento { border-left: 2px solid var(--cian); padding-left: 9px; margin-bottom: 6px; }
+    .evento .hora { color: var(--cian); opacity: 0.6; margin-right: 6px; }
+    .evento.aviso { border-left-color: var(--ambar); }
+    .evento.caos { border-left-color: var(--rojo); }
+    .evento.ok { border-left-color: var(--verde); }
+
+    /* Panel de inyeccion de caos */
+    #caos { }
+    #caos .cuerpo { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .ink {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 1px;
+      opacity: 0.7;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--carmesi);
+    }
+
+    button.cyber {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cian);
+      background: linear-gradient(180deg, rgba(0, 255, 204, 0.14), rgba(0, 255, 204, 0.02));
+      border: 1px solid var(--borde);
+      border-radius: 4px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    button.cyber:hover { background: var(--cian); color: #04120f; box-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
+
+    button.cyber.grinch {
+      color: var(--rojo);
+      border-color: rgba(255, 43, 61, 0.5);
+      background: linear-gradient(180deg, rgba(255, 43, 61, 0.16), rgba(255, 43, 61, 0.02));
+    }
+    button.cyber.grinch:hover { background: var(--rojo); color: #fff; box-shadow: 0 0 24px rgba(255, 43, 61, 0.6); }
+
+    .estado-caos {
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 10px;
+      border: 1px dashed rgba(255, 43, 61, 0.4);
+      border-radius: 4px;
+      text-align: center;
+      color: var(--ambar);
+    }
+    .estado-caos.activo { color: var(--rojo); border-style: solid; animation: latido 0.9s infinite; }
+
+    .metrica-mini { display: flex; justify-content: space-between; font-size: 11px; }
+    .metrica-mini span:last-child { color: var(--cian); font-family: 'Orbitron', sans-serif; }
+
+    @media (max-width: 980px) {
+      .rejilla { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; overflow-y: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="barra">
+      <h1>NEXUS OPS</h1>
+      <div class="barra-acciones">
+        <span class="badge offline" id="badge"><span class="pulso"></span><span id="badgeTexto">DESCONECTADO</span></span>
+        <a class="nav-link" href="/">Radar 3D del Polo Norte</a>
+      </div>
+    </header>
+
+    <div class="rejilla">
+      <section class="panel">
+        <h2>GRAFO DE NODOS DE AGENTES <span class="contador" id="totalNodos">0 nodos</span></h2>
+        <div id="grafo"><canvas id="lienzoGrafo"></canvas></div>
+        <div class="nodo-leyenda">
+          <div>VERDE — elfo operativo</div>
+          <div>AMBAR — latencia elevada</div>
+          <div>ROJO — nodo en caos</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>CONSOLA DE EVENTOS EN VIVO <span class="contador" id="totalEventos">0</span></h2>
+        <div id="consola"></div>
+      </section>
+
+      <section class="panel" id="caos">
+        <h2>INYECCION DE CAOS — GRINCH</h2>
+        <div class="cuerpo">
+          <div class="ink"><span>INTENSIDAD DEL CAOS</span><span id="valorCaos">35%</span></div>
+          <input type="range" id="rangoCaos" min="0" max="100" value="35">
+          <div class="metrica-mini"><span>Nodos afectados</span><span id="nodosAfectados">0</span></div>
+          <div class="metrica-mini"><span>Entropia red</span><span id="entropia">0.50</span></div>
+          <div class="metrica-mini"><span>Latencia media</span><span id="latencia">10 ms</span></div>
+          <div class="estado-caos" id="estadoCaos">GRINCH EN REPOSO</div>
+          <button class="cyber grinch" id="btnInyectar">Inyectar Caos</button>
+          <button class="cyber" id="btnRestaurar">Restaurar Orden</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const consola = document.getElementById('consola');
+    const totalEventos = document.getElementById('totalEventos');
+    const badge = document.getElementById('badge');
+    const badgeTexto = document.getElementById('badgeTexto');
+    const totalNodos = document.getElementById('totalNodos');
+    let nEventos = 0;
+    let caosActivo = false;
+
+    function marcaTiempo() {
+      const d = new Date();
+      return d.toTimeString().slice(0, 8);
+    }
+
+    function registrar(mensaje, tipo) {
+      const el = document.createElement('div');
+      el.className = 'evento ' + (tipo || '');
+      el.innerHTML = '<span class="hora">' + marcaTiempo() + '</span>' + mensaje;
+      consola.prepend(el);
+      nEventos++;
+      totalEventos.textContent = nEventos + ' eventos';
+      while (consola.childElementCount > 120) consola.removeChild(consola.lastChild);
+    }
+
+    /* ---- Grafo de nodos en canvas ---- */
+    const lienzo = document.getElementById('lienzoGrafo');
+    const ctx = lienzo.getContext('2d');
+    const N_NODOS = 24;
+    const nodos = [];
+    let semilla = 42;
+    function rnd() { semilla = (semilla * 1103515245 + 12345) % 2147483648; return semilla / 2147483648; }
+
+    function redimensionar() {
+      const r = lienzo.parentElement.getBoundingClientRect();
+      lienzo.width = r.width;
+      lienzo.height = r.height;
+    }
+
+    for (let i = 0; i < N_NODOS; i++) {
+      nodos.push({
+        x: 0.5 + Math.cos(i / N_NODOS * Math.PI * 2) * (0.24 + rnd() * 0.18),
+        y: 0.5 + Math.sin(i / N_NODOS * Math.PI * 2) * (0.24 + rnd() * 0.18),
+        base: 0.35 + rnd() * 0.5,
+        fase: rnd() * Math.PI * 2,
+        estado: 'ok'
+      });
+    }
+
+    function dibujar(t) {
+      const w = lienzo.width, h = lienzo.height;
+      ctx.clearRect(0, 0, w, h);
+      const cx = w / 2, cy = h / 2;
+
+      if (caosActivo) {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.5);
+        g.addColorStop(0, 'rgba(255, 43, 61, 0.16)');
+        g.addColorStop(1, 'rgba(255, 43, 61, 0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      ctx.strokeStyle = caosActivo ? 'rgba(255, 43, 61, 0.28)' : 'rgba(0, 255, 204, 0.16)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < nodos.length; i++) {
+        const a = nodos[i], b = nodos[(i + 5) % nodos.length];
+        ctx.beginPath();
+        ctx.moveTo(a.x * w, a.y * h);
+        ctx.lineTo(b.x * w, b.y * h);
+        ctx.stroke();
+      }
+
+      nodos.forEach((n, i) => {
+        const pulso = Math.sin(t * 0.002 + n.fase) * 0.15 + 1;
+        const r = (4 + n.base * 4) * pulso;
+        let color = '#2fe08a';
+        if (caosActivo && i % 3 === 0) color = '#ff2b3d';
+        else if (n.estado === 'aviso') color = '#ffb340';
+        ctx.beginPath();
+        ctx.arc(n.x * w, n.y * h, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 14;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      requestAnimationFrame(dibujar);
+    }
+
+    addEventListener('resize', redimensionar);
+    redimensionar();
+    requestAnimationFrame(dibujar);
+    totalNodos.textContent = N_NODOS + ' nodos';
+
+    /* ---- Telemetria desde el backend ---- */
+    function conectar() {
+      const fuente = new EventSource('/api/vuelo/stream');
+      fuente.onopen = () => {
+        badge.classList.remove('offline');
+        badgeTexto.textContent = 'EN LINEA';
+        registrar('Canal NexusOps establecido con el grafo de agentes', 'ok');
+      };
+      fuente.onmessage = (evento) => {
+        const d = JSON.parse(evento.data);
+        if (caosActivo) {
+          nodos.forEach((n, i) => { n.estado = (i % 3 === 0) ? 'aviso' : 'ok'; });
+        }
+        if (d.secuencia % 5 === 0) {
+          registrar('Muestra #' + d.secuencia + ' · lat ' + d.latitud.toFixed(1)
+            + ' · lon ' + d.longitud.toFixed(1) + ' · v ' + d.velocidadKmh.toFixed(0) + ' km/h',
+            caosActivo ? 'caos' : '');
+        }
+        document.getElementById('latencia').textContent = (6 + (d.secuencia % 9)) + ' ms';
+        document.getElementById('entropia').textContent = (caosActivo ? 0.9 : 0.5).toFixed(2);
+      };
+      fuente.onerror = () => {
+        badge.classList.add('offline');
+        badgeTexto.textContent = 'RECONECTANDO';
+      };
+    }
+
+    /* ---- Inyeccion de caos del Grinch ---- */
+    const rango = document.getElementById('rangoCaos');
+    const valorCaos = document.getElementById('valorCaos');
+    const estadoCaos = document.getElementById('estadoCaos');
+    rango.addEventListener('input', () => { valorCaos.textContent = rango.value + '%'; });
+
+    document.getElementById('btnInyectar').addEventListener('click', () => {
+      caosActivo = true;
+      const intensidad = Number(rango.value);
+      const afectados = Math.round(N_NODOS * intensidad / 100);
+      document.getElementById('nodosAfectados').textContent = afectados;
+      document.getElementById('entropia').textContent = '0.95';
+      estadoCaos.textContent = 'CAOS ACTIVO — ' + intensidad + '%';
+      estadoCaos.classList.add('activo');
+      registrar('GRINCH inyecta caos al ' + intensidad + '% — ' + afectados + ' nodos corrompidos', 'caos');
+    });
+
+    document.getElementById('btnRestaurar').addEventListener('click', () => {
+      caosActivo = false;
+      nodos.forEach(n => { n.estado = 'ok'; });
+      document.getElementById('nodosAfectados').textContent = '0';
+      document.getElementById('entropia').textContent = '0.50';
+      estadoCaos.textContent = 'GRINCH EN REPOSO';
+      estadoCaos.classList.remove('activo');
+      registrar('Consenso restaurado — el Grinch vuelve al reposo', 'ok');
+    });
+
+    conectar();
+    registrar('NexusOps iniciado — esperando telemetria del Polo Norte', 'aviso');
+  </script>
+</body>
+</html>

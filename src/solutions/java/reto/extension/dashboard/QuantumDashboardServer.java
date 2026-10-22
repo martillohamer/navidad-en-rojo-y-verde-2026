@@ -22,11 +22,14 @@ import com.sun.net.httpserver.HttpServer;
 public class QuantumDashboardServer {
 
     public static final String RUTA_INDEX = "/";
+    public static final String RUTA_NEXUS = "/nexus";
     public static final String RUTA_HEALTH = "/health";
     public static final String RUTA_TELEMETRIA = "/api/telemetria";
     public static final String RUTA_STREAM = "/api/vuelo/stream";
     public static final String RECURSO_INDEX = "static/index.html";
+    public static final String RECURSO_NEXUS = "static/nexus.html";
     public static final String RUTA_FICHERO_INDEX = "src/main/resources/static/index.html";
+    public static final String RUTA_FICHERO_NEXUS = "src/main/resources/static/nexus.html";
 
     public record Telemetria(long secuencia, double latitud, double longitud,
             double altitud, double velocidadKmh) {
@@ -47,7 +50,7 @@ public class QuantumDashboardServer {
     private final AtomicLong secuencia = new AtomicLong(0);
     private final AtomicBoolean activo;
     private ScheduledFuture<?> emision;
-    private byte[] cacheIndex;
+    private final java.util.Map<String, byte[]> cacheHtml = new java.util.concurrent.ConcurrentHashMap<>();
 
     public QuantumDashboardServer() throws IOException {
         this(0);
@@ -66,6 +69,7 @@ public class QuantumDashboardServer {
             return hilo;
         });
         this.servidor.createContext(RUTA_INDEX, this::gestionarIndex);
+        this.servidor.createContext(RUTA_NEXUS, this::gestionarNexus);
         this.servidor.createContext(RUTA_HEALTH, this::gestionarHealth);
         this.servidor.createContext(RUTA_TELEMETRIA, this::gestionarTelemetria);
         this.servidor.createContext(RUTA_STREAM, this::gestionarStream);
@@ -149,7 +153,15 @@ public class QuantumDashboardServer {
     }
 
     private void gestionarIndex(HttpExchange intercambio) throws IOException {
-        byte[] html = leerIndexHtml();
+        servirHtml(intercambio, RUTA_FICHERO_INDEX, RECURSO_INDEX);
+    }
+
+    private void gestionarNexus(HttpExchange intercambio) throws IOException {
+        servirHtml(intercambio, RUTA_FICHERO_NEXUS, RECURSO_NEXUS);
+    }
+
+    private void servirHtml(HttpExchange intercambio, String rutaFichero, String recurso) throws IOException {
+        byte[] html = leerHtml(rutaFichero, recurso);
         intercambio.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
         intercambio.sendResponseHeaders(200, html.length);
         try (OutputStream os = intercambio.getResponseBody()) {
@@ -183,22 +195,25 @@ public class QuantumDashboardServer {
         }
     }
 
-    private synchronized byte[] leerIndexHtml() throws IOException {
-        if (cacheIndex != null) {
-            return cacheIndex;
+    private byte[] leerHtml(String rutaFichero, String recurso) throws IOException {
+        byte[] cache = cacheHtml.get(recurso);
+        if (cache != null) {
+            return cache;
         }
-        Path fichero = Path.of(RUTA_FICHERO_INDEX);
+        Path fichero = Path.of(rutaFichero);
         if (Files.exists(fichero)) {
-            cacheIndex = Files.readAllBytes(fichero);
-            return cacheIndex;
+            byte[] bytes = Files.readAllBytes(fichero);
+            cacheHtml.put(recurso, bytes);
+            return bytes;
         }
-        try (InputStream recurso = getClass().getClassLoader().getResourceAsStream(RECURSO_INDEX)) {
-            if (recurso != null) {
-                cacheIndex = recurso.readAllBytes();
-                return cacheIndex;
+        try (InputStream entrada = getClass().getClassLoader().getResourceAsStream(recurso)) {
+            if (entrada != null) {
+                byte[] bytes = entrada.readAllBytes();
+                cacheHtml.put(recurso, bytes);
+                return bytes;
             }
         }
-        throw new IOException("No se encontro el recurso " + RECURSO_INDEX);
+        throw new IOException("No se encontro el recurso " + recurso);
     }
 
     public static final int PUERTO_POR_DEFECTO = 8081;
