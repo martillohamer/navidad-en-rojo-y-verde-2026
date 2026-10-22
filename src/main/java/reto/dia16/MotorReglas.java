@@ -3,6 +3,12 @@ package reto.dia16;
 public class MotorReglas {
 
     public String evaluarComportamiento(int cartasEnviadas, boolean seHaPortadoBien) {
-        throw new UnsupportedOperationException("Pendiente de implementar por el duende DEV");
+        if (!seHaPortadoBien) {
+            return "CARBON";
+        }
+        if (cartasEnviadas >= 1) {
+            return "REGALO";
+        }
+        return "ESPERA";
     }
 }
