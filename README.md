@@ -1,68 +1,173 @@
+<div align="center">
+
 # 🎄 Navidad en Rojo y Verde 2026
 
-![CI](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml/badge.svg)
+**Gimnasio de TDD en Java: 16 retos de lógica que empiezan en rojo y terminan en verde.**
 
-Calendario de adviento de retos de lógica de programación en **Java**, pensado para principiantes absolutos y escrito en castellano.
+[![CI](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/martillohamer/navidad-en-rojo-y-verde-2026/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+![JUnit 5](https://img.shields.io/badge/JUnit-5.10.2-25A162?logo=junit5&logoColor=white)
+![Build](https://img.shields.io/badge/build-BUILD%20SUCCESS-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-Cada día es un **test en rojo** 🔴 que falla. Tu misión es programar la solución hasta ponerlo en **verde** 🟢. Rojo y verde: los colores de la Navidad y los del TDD (desarrollo guiado por tests).
+[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 16 retos](#-los-16-retos) · [CI/CD](docs/CI_WORKFLOW.md)
 
-## 🚀 Empieza en 3 minutos
-Necesitas **Java 21** y **Maven** instalados.
+</div>
+
+Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 16 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
+
+El repositorio está pensado para **principiantes absolutos** y todo el material está en castellano. No hay frameworks, ni magia, ni dependencias ocultas: solo Java 21, Maven y JUnit 5.
+
+---
+
+## 🚀 Inicio rápido
+
+### Requisitos
+
+- **JDK 21 o superior** (el proyecto compila con `maven.compiler.release=21`; se ha verificado con JDK 21 y 24).
+- **Maven 3.9+** en el `PATH`, o una distribución local del wrapper de Maven.
 
 ```bash
 git clone https://github.com/martillohamer/navidad-en-rojo-y-verde-2026.git
 cd navidad-en-rojo-y-verde-2026
+
+# Compila las implementaciones y ejecuta los 23 tests: 16 retos en verde
+mvn clean test
+```
+
+Si Maven no está en el `PATH` y usas la distribución local del wrapper, en PowerShell:
+
+```powershell
+$mvn = Get-ChildItem "$HOME\.m2\wrapper\dists\apache-maven-*\*\bin\mvn.cmd" | Select-Object -First 1
+& $mvn.FullName clean test
+```
+
+### Entrena un reto desde cero
+
+El estado de `main` ya está en verde. Para practicar de verdad:
+
+1. Lee la historia y las pistas: `enunciados/dia01-el-despertar/enunciado.md`.
+2. Vacía el método en `src/main/java/reto/dia01/RetoDia01.java` dejando el cuerpo original del esqueleto:
+
+```java
+throw new UnsupportedOperationException("TODO: Implementa el saludo navideño");
+```
+
+3. Ejecuta solo ese día y trabaja hasta ponerlo en verde:
+
+```bash
 mvn test -Dtest=Dia01Test
 ```
 
-Verás el test en rojo. Ahora:
-1. Lee el enunciado: `enunciados/dia01-el-despertar/enunciado.md`
-2. Programa tu solución en `src/main/java/reto/dia01/RetoDia01.java`
-3. Vuelve a ejecutar el test. Cuando se ponga en verde, pasa al día siguiente.
+Cuando pase, compara tu solución con `src/solutions/java/reto/dia01/RetoDia01.java` y repite con el día siguiente. El resto del calendario no se toca.
 
-## 📅 Calendario
-| Día | Reto | Qué practicas | Estado |
-|---|---|---|---|
-| 01 | El despertar | Cadenas y concatenación | ✅ Disponible |
-| 02 | Abrigo o camiseta | Condicionales (if / else) | ✅ Disponible |
-| 03 | La cuenta atrás | Bucles (for) | ✅ Disponible |
-| 04 | El taller de duendes | Listas, for-each y excepciones | ✅ Disponible |
-| 05 | La cinta transportadora | Acumuladores, continue y excepciones | ✅ Disponible |
-| 06 | El trineo de Santa | Condicionales anidados y operador ternario | ✅ Disponible |
-| 07 | La montaña de cartas | Objetos, getters y ordenación | ✅ Disponible |
-| 08 | El gran reencuentro | Reutilizar clases y try / catch | ✅ Disponible |
-| 09 | La lista de deseos | Mapas (Map) y conteo | ✅ Disponible |
-| 10 | El mapa del recorrido | Texto, split y switch | ✅ Disponible |
-| 11 | La carta perdida | Expresiones regulares | ✅ Disponible |
-| 12 | El gran informe | Streams y filtros | ✅ Disponible |
-| 13 | Control de acceso | Excepciones personalizadas | ✅ Disponible |
-| 14 | El inventario secreto | Procesar texto en formato CSV | ✅ Disponible |
-| 15 | La flota de trineos | Interfaces | ✅ Disponible |
-| 16 | El motor de reglas | Reglas de decisión | ✅ Disponible |
-| 17–24 | Por anunciar | Ideas más avanzadas | 🚧 En preparación |
+---
 
-## 🗂️ Estructura del proyecto
+## 🏗️ Arquitectura del gimnasio TDD
+
+El proyecto separa deliberadamente **lo que practicas** de **la respuesta canónica**, y lo hace con dos árboles de fuentes simétricos gobernados por una única propiedad de Maven.
+
 ```text
-src/main/java/reto/diaNN/       aquí programas tú (esqueletos que empiezan en rojo)
-src/test/java/reto/diaNN/       los tests de cada día (no hace falta tocarlos)
-src/solutions/java/reto/diaNN/  soluciones de referencia (¡no mires antes de intentarlo!)
-enunciados/diaNN-nombre/        la historia y las pistas de cada día
-plantilla-reto/                 plantilla para crear nuevos retos
-scripts/                        herramientas (progreso, comprobar-estructura)
+navidad-en-rojo-y-verde-2026/
+├── src/
+│   ├── main/java/reto/diaNN/       implementación del reto (resuelta en main)
+│   ├── solutions/java/reto/diaNN/  solución de referencia (verde canónico)
+│   └── test/java/reto/diaNN/       especificación JUnit 5 (idéntica para ambos modos)
+├── enunciados/diaNN-nombre/        historia, preguntas, pseudocódigo, pista y reto extra
+├── scripts/
+│   ├── comprobar-estructura        invariante de simetría y byte-identidad
+│   └── progreso                    árbol navideño con el estado de los 16 retos
+├── plantilla-reto/                 plantilla para incorporar un día nuevo
+├── docs/CI_WORKFLOW.md             contrato de integración continua
+└── pom.xml                         propiedad clases.dir + perfil soluciones
 ```
 
-## 🧪 Rojo y verde: cómo funciona
-- `mvn test` prueba **tus** clases (`src/main/java`). Al principio fallan con `UnsupportedOperationException`.
-- `mvn -Psoluciones test` prueba las **soluciones de referencia** (`src/solutions/java`) y debe salir todo en verde. Es lo que comprueba el CI en cada cambio.
+### Un `pom.xml`, dos modos de ejecución
 
-## 🎄 Mira tu progreso
-Ejecuta `./scripts/progreso` (en Windows, `scripts\progreso.bat`; necesita `bash`, por ejemplo Git Bash) para ver cuántos retos llevas resueltos.
+| Modo | Origen de clases | Comando | Estado esperado |
+|---|---|---|---|
+| **Reto** | `src/main/java` | `mvn test` | 🔴 rojo si vacías un reto; 🟢 verde en el estado actual |
+| **Soluciones** | `src/solutions/java` | `mvn -Psoluciones test` | 🟢 verde siempre (lo exige el CI) |
+
+El `pom.xml` define `clases.dir` como `sourceDirectory` y el perfil `soluciones` la reescribe. Los **tests son exactamente los mismos** en ambos modos: si una solución de referencia no pasa la suite, el repositorio está roto.
+
+### La dualidad simétrica y su invariante
+
+Por cada clase de `src/main/java` debe existir su gemela en `src/solutions/java`, con **el mismo paquete y el mismo nombre de fichero**. `scripts/comprobar-estructura` verifica cuatro reglas:
+
+1. **No falta ninguna solución** (`FALTA la solucion`).
+2. **Ninguna solución lanza `UnsupportedOperationException`** (`SOLUCION INCOMPLETA`).
+3. **Las clases de apoyo son byte-idénticas** entre ambos árboles (`CLASE DE APOYO DISTINTA`).
+4. **No sobran ficheros en soluciones** (`SOBRA en soluciones`).
+
+Cuando un reto está resuelto, su implementación de `src/main/java` se copia literalmente a `src/solutions/java`, de modo que ambos ficheros son **byte a byte iguales**. Ese es el contrato que mantiene el gimnasio coherente: la solución que ve el alumno es la misma que valida la suite.
+
+### Estado verificado
+
+| Validación | Comando | Resultado |
+|---|---|---|
+| Suite completa (modo reto) | `mvn clean test` | ✅ 23 tests, 0 fallos |
+| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 23 tests, 0 fallos |
+| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 22 ficheros emparejados |
+
+---
+
+## 📅 Los 16 retos
+
+| Día | Reto | Componente principal | Concepto técnico |
+|:---:|---|---|---|
+| **01** | El despertar | `RetoDia01.saludoNavideno` | Cadenas, concatenación y defensa ante `null` |
+| **02** | Abrigo o camiseta | `RetoDia02.ropaSegunTemperatura` | Condicionales y umbrales |
+| **03** | La cuenta atrás | `RetoDia03.cuentaAtras` | Bucles `for` y `StringBuilder` |
+| **04** | El taller de duendes | `TallerDuendes` | Colecciones, `for-each` y excepción personalizada |
+| **05** | La cinta transportadora | `CintaTransportadora` | Acumuladores, `continue` y corte temprano |
+| **06** | El trineo de Santa | `TrineoSanta` | Condicionales y operador ternario |
+| **07** | La montaña de cartas | `GestorCartas` | Objetos, `Comparator` y orden estable |
+| **08** | El gran reencuentro | `MotorPoloNorte` | Reutilización de clases y `try/catch` multi-catch |
+| **09** | La lista de deseos | `ListaDeseos` | `HashMap`, `Map.merge` y conteo de frecuencias |
+| **10** | El mapa del recorrido | `NavegadorTrineo` | `split`, `switch` y normalización de texto |
+| **11** | La carta perdida | `AnalizadorCartas` | Expresiones regulares con `Pattern` y `Matcher` |
+| **12** | El gran informe | `GeneradorInformes` | Streams: `filter`, `mapToInt` y `sum` |
+| **13** | Control de acceso | `ControlAcceso` | Excepciones personalizadas y reglas de umbral |
+| **14** | El inventario secreto | `ParserInventario` | Parseo de CSV y `Integer.parseInt` |
+| **15** | La flota de trineos | `TrineoMagico` | Interfaces y polimorfismo |
+| **16** | El motor de reglas | `MotorReglas` | Reglas de decisión y orden de evaluación |
+
+Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El alcance actual son **16 retos**; los días 17-24 todavía no existen.
+
+## 🧪 Comandos de trabajo
+
+| Objetivo | Comando |
+|---|---|
+| Compilar y ejecutar toda la suite | `mvn clean test` |
+| Ejecutar un único reto | `mvn test -Dtest=Dia07Test` |
+| Validar las soluciones de referencia | `mvn -Psoluciones test` |
+| Comprobar la simetría de los árboles | `bash scripts/comprobar-estructura` |
+| Ver tu árbol de progreso | `./scripts/progreso` |
+
+En Windows, `scripts\progreso.bat` ejecuta el mismo árbol (requiere `bash`, por ejemplo Git Bash).
+
+## 🔁 Integración continua
+
+Cada `push` a `main` y cada Pull Request contra `main` o `feat/*` disparan el workflow **CI Navidad Roja y Verde**, con dos jobs:
+
+- **`validar-soluciones`** — ejecuta `bash scripts/comprobar-estructura` y `mvn -Psoluciones test`. Es el guardián del repositorio: si falla, no se fusiona.
+- **`progreso`** — ejecuta la suite en modo reto ignorando los fallos esperados y publica el árbol de progreso.
+
+El contrato completo (ciclo de vida del PR, reglas invariantes, diagnóstico de fallos y diagrama de flujo) está en **[docs/CI_WORKFLOW.md](docs/CI_WORKFLOW.md)**.
 
 ## 🤝 Contribuir
-Rama + Pull Request, commits en castellano y CI en verde. Las reglas y la guía para añadir un día nuevo están en [HANDOFF.md](HANDOFF.md).
 
-## 🧠 Agradecimiento
-Idea inspirada en el reto **Cookie Codebook** de OverTheWire Advent 2019 (recetas escritas como código). Aquí le damos la vuelta: código real, ejecutable y con tests. No se ha copiado código de aquel repo.
+- Nunca se hace `push` directo a `main`: **rama + Pull Request**.
+- Ramas de trabajo con el patrón `code/diaNN` (por ejemplo, `code/dia17`).
+- Commits en castellano con el formato `feat(diaNN): ...` o `docs: ...`.
+- No se fusiona nada con el CI en rojo.
+- Para añadir un día, sigue el checklist de [HANDOFF.md](HANDOFF.md) y usa `plantilla-reto/`.
+
+## 🧠 Créditos
+
+Idea inspirada en el reto **Cookie Codebook** de OverTheWire Advent 2019 (recetas escritas como código). Aquí le damos la vuelta: código real, ejecutable y con tests. No se ha copiado código de aquel repositorio.
 
 ## 📜 Licencia
-Licencia MIT.
+
+Distribuido bajo licencia **MIT**. Consulta [LICENSE](LICENSE).

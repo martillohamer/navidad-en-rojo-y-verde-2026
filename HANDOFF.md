@@ -6,37 +6,38 @@ Guía técnica para quien retome el proyecto (personas o IAs). Lee esto antes de
 Adviento de retos de lógica en Java para principiantes, en castellano. Cada día = un test en rojo que el alumno pone en verde. Repositorio: `github.com/martillohamer/navidad-en-rojo-y-verde-2026`.
 
 ## Estado actual
-- Días 1 a 16: esqueleto, test y solución de referencia ✅.
+- Días 1 a 16: reto implementado en `src/main/java`, test y solución de referencia en `src/solutions/java`; suite completa en verde ✅.
 - Días 17 a 24: **todavía no existen** ⏳.
-- Enunciados: los de los días 1 a 3 son reales. Los de los días 4 a 16 son texto genérico de relleno y hay que reescribirlos (qué hace la función, ejemplos, pista, reto extra).
+- Enunciados: los 16 días tienen enunciado completo (historia, preguntas de razonamiento, pseudocódigo, pista plegable, ruta del fichero, comando de test y reto extra).
 
 ## Stack
 Java 21, Maven, JUnit 5 (5.10.2), GitHub Actions. Sin más dependencias.
 
 ## Estructura (y por qué)
 ```text
-src/main/java/reto/diaNN/       esqueletos (lanzan UnsupportedOperationException) + clases de apoyo
+src/main/java/reto/diaNN/       implementaciones resueltas + clases de apoyo (un día nuevo empieza lanzando UnsupportedOperationException)
 src/test/java/reto/diaNN/       tests JUnit de cada día
-src/solutions/java/reto/diaNN/  soluciones: MISMO nombre y paquete que el esqueleto + copia idéntica de las clases de apoyo
+src/solutions/java/reto/diaNN/  soluciones: MISMO nombre y paquete que la implementación + copia idéntica de las clases de apoyo
 enunciados/diaNN-nombre/        enunciado.md de cada día
 plantilla-reto/                 plantilla de enunciado, esqueleto y test
 scripts/                        progreso, progreso.bat, comprobar-estructura
+docs/CI_WORKFLOW.md             contrato de integración continua y ciclo de PR
 ```
 Decisión: se usa la estructura estándar de Maven para que VS Code, IntelliJ y Maven la entiendan sin plugins. Una carpeta de tests con nombres como `dia01-el-despertar` y paquete `reto.dia01` hacía que el editor marcara errores (el paquete debe coincidir con la carpeta).
 
 ## Cómo cambia entre rojo y verde
 El `pom.xml` usa la propiedad `clases.dir` como `sourceDirectory`:
-- Por defecto vale `src/main/java` (esqueletos, rojo).
-- El perfil `soluciones` la cambia a `src/solutions/java` (verde).
-Los tests son los mismos en los dos modos.
+- Por defecto vale `src/main/java` (implementaciones del reto).
+- El perfil `soluciones` la cambia a `src/solutions/java` (verde canónico).
+Los tests son los mismos en los dos modos. En el estado actual ambos árboles están resueltos y en verde; un día nuevo se incorpora en rojo (esqueleto con `UnsupportedOperationException`) y se pone en verde al implementarlo.
 
 ## Comandos
 | Qué | Comando |
 |---|---|
-| Ver los retos en rojo | `mvn test` |
+| Ejecutar la suite del modo reto | `mvn test` |
 | Un solo día | `mvn test -Dtest=Dia04Test` |
 | Validar las soluciones (debe ir todo en verde) | `mvn -Psoluciones test` |
-| Comprobar que esqueletos y soluciones están emparejados | `bash scripts/comprobar-estructura` |
+| Comprobar que implementaciones y soluciones están emparejadas | `bash scripts/comprobar-estructura` |
 | Ver el árbol de progreso | `./scripts/progreso` |
 
 ## Reglas de trabajo
