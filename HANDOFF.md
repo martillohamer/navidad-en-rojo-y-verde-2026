@@ -6,21 +6,49 @@ Guía técnica para quien retome el proyecto (personas o IAs). Lee esto antes de
 Adviento de retos de lógica en Java para principiantes, en castellano. Cada día = un test en rojo que el alumno pone en verde. Repositorio: `github.com/martillohamer/navidad-en-rojo-y-verde-2026`.
 
 ## Estado actual
-- **Proyecto completo: 24 de 24 retos terminados** 🎉. Todos los días implementados en `src/main/java`, con test y solución de referencia en `src/solutions/java`; suite completa en verde ✅.
-- La expansión al calendario extendido ha concluido con éxito rotundo: los días 17 a 24 están integrados y el callejón de retos está cerrado.
+- **Proyecto completo de extremo a extremo** 🎉: el **ciclo de adviento de 24 retos** está terminado y, sobre él, se ha construido una **Extensión de Alta Fiabilidad y Sistemas Distribuidos**. Suite completa: **224 tests en verde absoluto** (`BUILD SUCCESS` en modo reto y soluciones).
+- Todos los días implementados en `src/main/java`, con test y solución de referencia byte-idéntica en `src/solutions/java`.
+- **43 ficheros emparejados** verificados por `scripts/comprobar-estructura` con simetría binaria perfecta (`cmp` sin diferencias).
 - Enunciados: los 24 días tienen enunciado completo (historia, preguntas de razonamiento, pseudocódigo, pista plegable, ruta del fichero, comando de test y reto extra).
 
+## Extensión de Alta Fiabilidad y Sistemas Distribuidos
+Subsistemas avanzados bajo `reto/extension/` (y `reto/cli/`), todos con test JUnit 5 y copia simétrica en soluciones:
+
+```text
+reto/extension/caos/       GrinchChaosEngine     Caos determinista (Random con semilla), latencia, desconexion P2P, corrupcion y consenso BFT
+reto/extension/agente/     ElfoAgentMemoryStore  Memoria vectorial con similitud de coseno y record CartaMemoria
+reto/extension/ledger/     MerkleLedger          Raiz de Merkle con SHA-256 (MessageDigest)
+reto/extension/oraculo/    OllamaOraculoClient   Cliente HttpClient nativo contra Ollama (llama3) con payload/parseo JSON propios
+reto/extension/ia/         ElfReinforcementEngine Q-learning en memoria con politica epsilon-greedy
+reto/extension/wasm/       WasmBridge            Logica pura JDK-neutral, hash FNV-1a y contrato de serializacion
+reto/extension/k8s/        ElfoOperator          Operador estilo Kubernetes: CRD, Reconciler<T> y auto-reparacion de pods
+reto/extension/dsl/        NavidadCompiler       DSL con expresiones regulares y record InstruccionRegalo
+reto/extension/radar/      SseTelemetriaController  SSE con HttpServer + ScheduledExecutorService y cliente Three.js
+reto/extension/dashboard/  QuantumDashboardServer  Servidor HTTP nativo con telemetria interactiva
+reto/cli/                  NorthPoleCommandCenter  Centro de mando CLI con banner ANSI y veredicto del despegue
+```
+
+## Patrones técnicos clave
+- **Inyección determinista de caos:** el `Random` se inyecta por constructor (`new Random(semilla)`), de modo que la aleatoriedad de `GrinchChaosEngine` y `ElfReinforcementEngine` es reproducible en tests. Nunca se usa aleatoriedad global.
+- **Tipos inmutables:** todo modelo es un `record` (`PoliticaCaos`, `ResultadoCaos`, `Estado`, `Accion`, `CartaMemoria`, `Transaccion`, `PodElfo`, `ElfoSpec`, `ElfoRecurso`, `WasmEvento`). Las listas se copian defensivamente con `List.copyOf` y se validan en el constructor compacto.
+- **Simetría de compilación estricta:** cada clase de `src/main/java` tiene gemela byte-idéntica en `src/solutions/java`. El `pom.xml` conmuta el `sourceDirectory` vía la propiedad `clases.dir` (perfil `soluciones`).
+- **Control de convergencia en el Operador K8s:** el bucle `reconciliar` lleva el estado observado hacia la spec deseada; los pods creados entran directamente en `Running` (el operador simula el scheduling), lo que garantiza que `estaConvergido` termine siendo verdadero. Un test detectó que un estado `Pending` inicial rompía la convergencia.
+- **Servidores HTTP nativos:** `com.sun.net.httpserver` con hilos daemon y apagado limpio (`stop(0)`), sin frameworks externos.
+
 ## Stack
-Java 21, Maven, JUnit 5 (5.10.2), GitHub Actions. Sin más dependencias.
+Java 21, Maven, JUnit 5 (5.10.2), GitHub Actions. Sin dependencias externas: la extensión usa solo el JDK estándar.
 
 ## Estructura (y por qué)
 ```text
 src/main/java/reto/diaNN/       implementaciones resueltas + clases de apoyo (un día nuevo empieza lanzando UnsupportedOperationException)
-src/test/java/reto/diaNN/       tests JUnit de cada día
-src/solutions/java/reto/diaNN/  soluciones: MISMO nombre y paquete que la implementación + copia idéntica de las clases de apoyo
+src/main/java/reto/extension/    subsistemas avanzados (caos, agente, ledger, oraculo, ia, wasm, k8s, dsl, radar, dashboard)
+src/main/java/reto/cli/          centro de mando CLI
+src/test/java/reto/              tests JUnit de cada día y de cada subsistema
+src/solutions/java/reto/         soluciones: MISMO nombre y paquete que la implementación + copia idéntica byte a byte
 enunciados/diaNN-nombre/        enunciado.md de cada día
 plantilla-reto/                 plantilla de enunciado, esqueleto y test
 scripts/                        progreso, progreso.bat, comprobar-estructura
+deploy.ps1                      despliegue automatizado (clean + test + soluciones + progreso)
 docs/CI_WORKFLOW.md             contrato de integración continua y ciclo de PR
 ```
 Decisión: se usa la estructura estándar de Maven para que VS Code, IntelliJ y Maven la entiendan sin plugins. Una carpeta de tests con nombres como `dia01-el-despertar` y paquete `reto.dia01` hacía que el editor marcara errores (el paquete debe coincidir con la carpeta).
@@ -39,6 +67,7 @@ Los tests son los mismos en los dos modos. En el estado actual ambos árboles es
 | Validar las soluciones (debe ir todo en verde) | `mvn -Psoluciones test` |
 | Comprobar que implementaciones y soluciones están emparejadas | `bash scripts/comprobar-estructura` |
 | Ver el árbol de progreso | `./scripts/progreso` |
+| Despliegue completo + verificación | `pwsh -File ./deploy.ps1` |
 
 ## Reglas de trabajo
 - Nunca push directo a `main`: rama + Pull Request.
@@ -66,3 +95,11 @@ Los tests son los mismos en los dos modos. En el estado actual ambos árboles es
 ## CI
 - `validar-soluciones`: comprueba la estructura y ejecuta `mvn -Psoluciones test`. Debe ir en verde.
 - `progreso`: ejecuta `mvn test` ignorando fallos y muestra el progreso. Los rojos son esperados.
+
+## Pautas para futuras ampliaciones y mantenimiento
+- **Añadir un reto del calendario:** sigue el checklist anterior (esqueleto → test → enunciado → solución → README → PR).
+- **Añadir un subsistema de la extensión:** crea el paquete `reto/extension/<modulo>/`, escribe **primero** el test (TDD), implementa con tipos inmutables, replica byte-idéntico en `src/solutions/java`, y verifica con `cmp` + `scripts/comprobar-estructura`.
+- **Nuevas dependencias:** evitarlas. La extensión usa solo el JDK estándar (`HttpClient`, `HttpServer`, `MessageDigest`, `ScheduledExecutorService`, `Random`). Si algo exige una librería externa, documéntalo en `pom.xml` y en este fichero.
+- **Determinismo ante todo:** cualquier componente con azar debe aceptar una fuente inyectable para poder testearse con semilla fija.
+- **Antes de dar algo por cerrado:** ejecuta `pwsh -File ./deploy.ps1` (o los dos `mvn` equivalentes) y `bash scripts/comprobar-estructura`; enseña la salida real, no la prometas.
+- **Estándares de fichero:** UTF-8 sin BOM y saltos de línea LF. Tras escribir con herramientas que inserten CRLF, normaliza con `[System.IO.File]::WriteAllText(ruta, texto, (New-Object System.Text.UTF8Encoding($false)))`.

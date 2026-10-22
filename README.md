@@ -10,13 +10,13 @@
 ![Build](https://img.shields.io/badge/build-BUILD%20SUCCESS-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 24 retos](#-los-24-retos) · [CI/CD](docs/CI_WORKFLOW.md)
+[Inicio rápido](#-inicio-rápido) · [Arquitectura](#-arquitectura-del-gimnasio-tdd) · [Los 24 retos](#-los-24-retos) · [Extensión de alta fiabilidad](#-extensión-de-alta-fiabilidad-y-sistemas-distribuidos) · [CI/CD](docs/CI_WORKFLOW.md)
 
 </div>
 
 Rojo y verde son los colores de la Navidad y también los del ciclo **TDD** (*Test-Driven Development*). Cada día de este calendario de adviento nació como un test JUnit 5 que fallaba: la misión era escribir el código mínimo para ponerlo en verde sin tocar la especificación. **Los 24 retos están resueltos y la suite completa pasa en verde**; el repositorio queda como gimnasio de referencia para estudiar cada solución y volver a practicarla desde cero.
 
-El repositorio está pensado para **principiantes absolutos** y todo el material está en castellano. No hay frameworks, ni magia, ni dependencias ocultas: solo Java 21, Maven y JUnit 5.
+El repositorio está pensado para **principiantes absolutos** y todo el material está en castellano. No hay frameworks, ni magia, ni dependencias ocultas: solo Java 21, Maven y JUnit 5. Sobre ese núcleo crece además una **Extensión de Alta Fiabilidad y Sistemas Distribuidos** (red P2P con consenso BFT, memoria vectorial, ledger de Merkle, oráculo LLM, caos determinista, aprendizaje por refuerzo, puente WebAssembly, operador Kubernetes y dashboard HTTP): **224 tests** en verde absoluto.
 
 ---
 
@@ -31,7 +31,7 @@ El repositorio está pensado para **principiantes absolutos** y todo el material
 git clone https://github.com/martillohamer/navidad-en-rojo-y-verde-2026.git
 cd navidad-en-rojo-y-verde-2026
 
-# Compila las implementaciones y ejecuta los 77 tests: 24 retos en verde (¡calendario completo!)
+# Compila las implementaciones y ejecuta la suite completa: 224 tests (24 retos + extensión)
 mvn clean test
 ```
 
@@ -71,12 +71,14 @@ El proyecto separa deliberadamente **lo que practicas** de **la respuesta canón
 navidad-en-rojo-y-verde-2026/
 ├── src/
 │   ├── main/java/reto/diaNN/       implementación del reto (resuelta en main)
-│   ├── solutions/java/reto/diaNN/  solución de referencia (verde canónico)
-│   └── test/java/reto/diaNN/       especificación JUnit 5 (idéntica para ambos modos)
+│   ├── main/java/reto/extension/   subsistemas avanzados (P2P, IA, k8s, wasm, dashboard...)
+│   ├── solutions/java/reto/        solución de referencia (verde canónico, byte-idéntica)
+│   └── test/java/reto/             especificación JUnit 5 (idéntica para ambos modos)
 ├── enunciados/diaNN-nombre/        historia, preguntas, pseudocódigo, pista y reto extra
 ├── scripts/
 │   ├── comprobar-estructura        invariante de simetría y byte-identidad
 │   └── progreso                    árbol navideño con el estado de los 24 retos
+├── deploy.ps1                      despliegue automatizado (clean + test + soluciones + progreso)
 ├── plantilla-reto/                 plantilla para incorporar un día nuevo
 ├── docs/CI_WORKFLOW.md             contrato de integración continua
 └── pom.xml                         propiedad clases.dir + perfil soluciones
@@ -106,9 +108,9 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 
 | Validación | Comando | Resultado |
 |---|---|---|
-| Suite completa (modo reto) | `mvn clean test` | ✅ 77 tests, 0 fallos |
-| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 77 tests, 0 fallos |
-| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 31 ficheros emparejados |
+| Suite completa (modo reto) | `mvn clean test` | ✅ 224 tests, 0 fallos |
+| Suite completa (soluciones) | `mvn -Psoluciones test` | ✅ 224 tests, 0 fallos |
+| Invariante estructural | `bash scripts/comprobar-estructura` | ✅ 43 ficheros emparejados |
 
 ---
 
@@ -143,6 +145,27 @@ Cuando un reto está resuelto, su implementación de `src/main/java` se copia li
 
 Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado, una pista plegable y un reto extra. El calendario está **completo**: los **24 retos** están disponibles.
 
+## 🛰️ Extensión de Alta Fiabilidad y Sistemas Distribuidos
+
+Más allá del calendario, el repositorio incorpora un conjunto de subsistemas de nivel industrial construidos con el mismo rigor TDD (tipos inmutables con `record`, inyección determinista de aleatoriedad y simetría estricta `src/main` ↔ `src/solutions`). Todos viven bajo `reto.extension.*` y suman **147 tests** adicionales sobre los 77 del calendario.
+
+| Módulo | Paquete | Componente | Concepto técnico |
+|---|---|---|---|
+| **Red P2P con consenso BFT** | `reto.extension.caos` | `GrinchChaosEngine` | Inyección de caos determinista (`Random` con semilla): latencia, desconexión de nodos y corrupción de paquetes |
+| **Motor de caos y auto-recuperación** | `reto.extension.caos` | `GrinchChaosEngine.ejecutarConDiagnostico` / `alcanzarConsenso` | Resiliencia con `Supplier`, política inmutable `PoliticaCaos` y consenso 2/3 |
+| **Memoria vectorial del agente elfo** | `reto.extension.agente` | `ElfoAgentMemoryStore` | Similitud de coseno pura con streams y `record CartaMemoria` |
+| **Ledger inmutable de Merkle** | `reto.extension.ledger` | `MerkleLedger` | Hashing SHA-256 con `MessageDigest` y cálculo de raíz de Merkle |
+| **Oráculo LLM local (Ollama)** | `reto.extension.oraculo` | `OllamaOraculoClient` | `HttpClient` nativo, payload/parseo JSON sin dependencias, `llama3` en `localhost:11434` |
+| **Aprendizaje por refuerzo (RL)** | `reto.extension.ia` | `ElfReinforcementEngine` | Q-learning en memoria con política ε-greedy y decaimiento de epsilon |
+| **Puente WebAssembly** | `reto.extension.wasm` | `WasmBridge` | Lógica pura sin dependencias de JVM, hash FNV-1a y contrato de serialización |
+| **Operador Kubernetes + CRD** | `reto.extension.k8s` | `ElfoOperator` | Bucle de reconciliación (`Reconciler<T>`), estado deseado vs. actual y auto-reparación de pods |
+| **DSL navideño** | `reto.extension.dsl` | `NavidadCompiler` | Motor de expresiones regulares y `record InstruccionRegalo` |
+| **Radar web 3D (SSE)** | `reto.extension.radar` | `SseTelemetriaController` | Server-Sent Events con `HttpServer` y `ScheduledExecutorService` + cliente Three.js |
+| **Dashboard cuántico** | `reto.extension.dashboard` | `QuantumDashboardServer` | Servidor HTTP nativo con telemetría interactiva y cierre limpio |
+| **Centro de mando CLI** | `reto.cli` | `NorthPoleCommandCenter` | Banner ANSI, simulación paso a paso y veredicto del despegue |
+
+Los patrones transversales de toda la extensión (inyección determinista de caos, inmutabilidad con `record` y simetría de compilación) se detallan en [HANDOFF.md](HANDOFF.md).
+
 ## 🧪 Comandos de trabajo
 
 | Objetivo | Comando |
@@ -152,6 +175,7 @@ Cada enunciado incluye historia, preguntas de razonamiento, pseudocódigo guiado
 | Validar las soluciones de referencia | `mvn -Psoluciones test` |
 | Comprobar la simetría de los árboles | `bash scripts/comprobar-estructura` |
 | Ver tu árbol de progreso | `./scripts/progreso` |
+| Despliegue completo + verificación | `pwsh -File ./deploy.ps1` |
 
 En Windows, `scripts\progreso.bat` ejecuta el mismo árbol (requiere `bash`, por ejemplo Git Bash).
 
