@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RADAR TÁCTICO DE PARAGUAY — 18 Entidades</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --cian: #00ffcc;
@@ -28,7 +25,7 @@
       overflow: hidden;
       background: radial-gradient(circle at 50% 40%, #062024 0%, #02080a 70%);
       color: var(--texto);
-      font-family: 'Fira Code', ui-monospace, monospace;
+      font-family: ui-monospace, 'Cascadia Code', 'Fira Code', Consolas, monospace;
       user-select: none;
     }
 
@@ -44,6 +41,35 @@
     }
 
     #escena { position: fixed; inset: 0; z-index: 1; }
+
+    #etiquetas3d {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .etiqueta-depto {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #c8fff4;
+      text-shadow: 0 0 8px rgba(0, 255, 204, 0.9), 0 0 18px rgba(0, 255, 204, 0.45);
+      padding: 2px 5px;
+      border-left: 2px solid rgba(0, 255, 204, 0.55);
+      background: rgba(2, 12, 14, 0.45);
+      white-space: nowrap;
+    }
+
+    .etiqueta-depto.pequena {
+      font-size: 9px;
+      color: #ffe98a;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+      border-left-color: rgba(255, 215, 0, 0.8);
+    }
 
     .panel {
       position: fixed;
@@ -70,7 +96,7 @@
     }
 
     header h1 {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       font-weight: 800;
       font-size: clamp(14px, 1.8vw, 20px);
       letter-spacing: 3px;
@@ -83,8 +109,8 @@
 
     .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    .nav a {
-      font-family: 'Orbitron', sans-serif;
+    .nav a, .btn-vista {
+      font-family: 'Segoe UI', system-ui, sans-serif;
       font-size: 10px;
       font-weight: 600;
       letter-spacing: 1.2px;
@@ -95,9 +121,12 @@
       padding: 7px 12px;
       transition: all 0.18s ease;
       white-space: nowrap;
+      background: transparent;
+      cursor: pointer;
     }
-    .nav a:hover { background: var(--cian); color: #04120f; box-shadow: 0 0 18px rgba(0, 255, 204, 0.5); }
+    .nav a:hover, .btn-vista:hover { background: var(--cian); color: #04120f; box-shadow: 0 0 18px rgba(0, 255, 204, 0.5); }
     .nav a.activo { background: var(--oro); color: #101005; border-color: var(--oro); box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
+    .btn-vista { color: var(--oro); border-color: rgba(255, 215, 0, 0.45); }
 
     .badge {
       display: inline-flex;
@@ -132,7 +161,7 @@
     }
 
     #telemetria h2, #consolaPanel h2 {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       font-size: 10px;
       letter-spacing: 3px;
       color: var(--oro);
@@ -150,7 +179,7 @@
       background: rgba(0, 255, 204, 0.05);
     }
     .fila .clave { font-size: 9px; letter-spacing: 1.2px; opacity: 0.6; text-transform: uppercase; }
-    .fila .valor { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 600; color: var(--cian); }
+    .fila .valor { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; font-weight: 600; color: var(--cian); text-align: right; }
 
     .destacado {
       padding: 10px;
@@ -197,6 +226,22 @@
       line-height: 1.7;
     }
 
+    #carga {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 8, 10, 0.88);
+      color: var(--cian);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-align: center;
+      padding: 24px;
+    }
+    #carga.oculto { display: none; }
+
     @media (max-width: 820px) {
       #telemetria { width: 190px; padding: 11px; }
       #consolaPanel { width: 200px; padding: 11px; }
@@ -207,6 +252,7 @@
 </head>
 <body>
   <canvas id="escena"></canvas>
+  <div id="etiquetas3d"></div>
 
   <header class="panel">
     <h1 id="titulo-radar">RADAR TÁCTICO DE PARAGUAY</h1>
@@ -214,6 +260,7 @@
       <a href="/">[Radar Global (/)]</a>
       <a href="/nexus">[NexusOps (/nexus)]</a>
       <a href="/paraguay" class="activo">[Paraguay 3D (/paraguay)]</a>
+      <button type="button" id="resetVista" class="btn-vista">Restablecer vista</button>
     </nav>
     <span class="badge offline" id="badge"><span class="pulso"></span><span id="badgeTexto">OFFLINE</span></span>
   </header>
@@ -238,15 +285,18 @@
   </section>
 
   <div id="leyenda">
-    <div>18 entidades territoriales · mapa holografico</div>
-    <div>Trineo AAA en secuencia georreferenciada</div>
+    <div>18 entidades territoriales · GeoJSON geoBoundaries + d3-geo</div>
+    <div>Chaco: Boquerón, Alto Paraguay, Presidente Hayes · Capital: Asunción</div>
+    <div>Ríos Paraguay, Paraná y Pilcomayo · Natural Earth 10m</div>
   </div>
+
+  <div id="carga">SINCRONIZANDO CARTOGRAFÍA REAL…</div>
 
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
       }
     }
   </script>
@@ -254,313 +304,445 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    import { geoMercator, geoContains, geoCentroid } from './vendor/d3-geo.esm.js';
+    import polylabel from './vendor/polylabel.esm.js';
 
-    /* ===================== DATOS: 18 ENTIDADES TERRITORIALES ===================== */
-    const DEPARTAMENTOS = [
-      { codigo: 'XVII', n: 'Alto Paraguay', capital: 'Fuerte Olimpo', lat: -20.30, lon: -59.20, poblacion: 23530 },
-      { codigo: 'XVI', n: 'Boquerón', capital: 'Filadelfia', lat: -22.35, lon: -60.20, poblacion: 68595 },
-      { codigo: 'XV', n: 'Presidente Hayes', capital: 'Villa Hayes', lat: -24.30, lon: -58.70, poblacion: 126880 },
-      { codigo: 'I', n: 'Concepción', capital: 'Concepción', lat: -23.40, lon: -57.30, poblacion: 204536 },
-      { codigo: 'XIII', n: 'Amambay', capital: 'Pedro Juan Caballero', lat: -22.55, lon: -55.90, poblacion: 167059 },
-      { codigo: 'XIV', n: 'Canindeyú', capital: 'Salto del Guairá', lat: -24.10, lon: -55.20, poblacion: 191447 },
-      { codigo: 'X', n: 'Alto Paraná', capital: 'Ciudad del Este', lat: -25.51, lon: -54.65, poblacion: 763702 },
-      { codigo: 'V', n: 'Caaguazú', capital: 'Coronel Oviedo', lat: -25.46, lon: -56.02, poblacion: 431519 },
-      { codigo: 'II', n: 'San Pedro', capital: 'San Pedro del Ycuamandiyú', lat: -24.10, lon: -56.60, poblacion: 355175 },
-      { codigo: 'III', n: 'Cordillera', capital: 'Caacupé', lat: -25.39, lon: -57.10, poblacion: 268037 },
-      { codigo: 'ASU', n: 'Asunción', capital: 'Asunción', lat: -25.26, lon: -57.58, poblacion: 462241 },
-      { codigo: 'XI', n: 'Central', capital: 'Areguá', lat: -25.45, lon: -57.45, poblacion: 2072605 },
-      { codigo: 'IX', n: 'Paraguarí', capital: 'Paraguarí', lat: -25.75, lon: -57.10, poblacion: 221932 },
-      { codigo: 'IV', n: 'Guairá', capital: 'Villarrica', lat: -25.80, lon: -56.40, poblacion: 180121 },
-      { codigo: 'VI', n: 'Caazapá', capital: 'Caazapá', lat: -26.20, lon: -56.30, poblacion: 139479 },
-      { codigo: 'VII', n: 'Itapúa', capital: 'Encarnación', lat: -27.05, lon: -55.75, poblacion: 453692 },
-      { codigo: 'VIII', n: 'Misiones', capital: 'San Juan Bautista', lat: -26.95, lon: -57.10, poblacion: 111142 },
-      { codigo: 'XII', n: 'Ñeembucú', capital: 'Pilar', lat: -26.85, lon: -58.10, poblacion: 86015 }
-    ];
+    const ANCHO_MAPA = 120;
+    const ALTO_MAPA = 150;
+    const ALTURA_MAPA = 0.9;
+    const ALTURA_NODO = 4.2;
+    const DURACION_TRAMO = 3.1;
 
-    DEPARTAMENTOS.forEach((d) => {
-      d.poblacionTexto = d.poblacion.toLocaleString('es-PY');
-      d.regalos = Math.max(1, Math.round(d.poblacion / 18000));
-    });
+    const consola = document.getElementById('consola');
+    const badge = document.getElementById('badge');
+    const badgeTexto = document.getElementById('badgeTexto');
+    const elDept = document.getElementById('deptActual');
+    const elCapital = document.getElementById('capital');
+    const elPoblacion = document.getElementById('poblacion');
+    const elEstado = document.getElementById('estadoEntrega');
+    const elEntrega = document.getElementById('entrega');
+    const capaCarga = document.getElementById('carga');
 
-    const LAT_C = -23.30;
-    const LON_C = -58.45;
-    const ESCALA = 13.0;
-    const ALTURA_NODO = 3.4;
+    let entregas = 0;
+    let regalosTotales = 0;
+    const entregados = new Set();
 
-    function geoA3D(lat, lon, y) {
-      return new THREE.Vector3((lon - LON_C) * ESCALA, y || 0, (lat - LAT_C) * ESCALA);
+    function hora() {
+      return new Date().toTimeString().slice(0, 8);
     }
 
-    /* ===================== ESCENA ===================== */
-    const canvas = document.getElementById('escena');
-    const escena = new THREE.Scene();
-    escena.background = new THREE.Color(0x02080a);
-    escena.fog = new THREE.FogExp2(0x02080a, 0.0028);
-
-    const camara = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 3000);
-    camara.position.set(0, 150, 110);
-
-    const renderizador = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderizador.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderizador.setSize(innerWidth, innerHeight);
-
-    const controles = new OrbitControls(camara, renderizador.domElement);
-    controles.enableDamping = true;
-    controles.dampingFactor = 0.06;
-    controles.autoRotate = true;
-    controles.autoRotateSpeed = 0.25;
-    controles.minDistance = 90;
-    controles.maxDistance = 230;
-    controles.maxPolarAngle = Math.PI / 2.02;
-    controles.target.set(0, 0, 0);
-    controles.update();
-
-    escena.add(new THREE.AmbientLight(0x88ddff, 0.7));
-    const luzDir = new THREE.DirectionalLight(0xffffff, 1.4);
-    luzDir.position.set(80, 140, 90);
-    escena.add(luzDir);
-    const luzCian = new THREE.PointLight(0x00ffcc, 1.2, 600);
-    luzCian.position.set(0, 70, 0);
-    escena.add(luzCian);
-    const luzOro = new THREE.PointLight(0xffd700, 0.9, 400);
-    luzOro.position.set(-70, 40, -40);
-    escena.add(luzOro);
-
-    /* ===================== MAPA HOLOGRÁFICO ===================== */
-    const planoGrupo = new THREE.Group();
-    escena.add(planoGrupo);
-
-    const rejilla = new THREE.GridHelper(200, 40, 0x00ffcc, 0x0a3b3b);
-    rejilla.material.transparent = true;
-    rejilla.material.opacity = 0.16;
-    rejilla.position.y = -0.2;
-    planoGrupo.add(rejilla);
-
-    /* Silueta real de Paraguay: Chaco al noroeste, Region Oriental al sureste. */
-    const CONTORNO = [
-      [-62.65, -22.10], [-62.60, -21.30], [-62.35, -20.55], [-61.90, -20.05],
-      [-61.20, -19.65], [-60.30, -19.35], [-59.50, -19.30], [-58.90, -19.75],
-      [-58.25, -20.15], [-57.90, -20.05], [-57.55, -20.80], [-57.20, -21.50],
-      [-56.80, -22.05], [-56.20, -22.25], [-55.70, -22.55], [-55.35, -23.05],
-      [-55.10, -23.55], [-54.75, -23.90], [-54.30, -24.05], [-54.20, -24.55],
-      [-54.35, -25.05], [-54.55, -25.55], [-54.60, -26.05], [-54.45, -26.55],
-      [-54.70, -26.90], [-55.20, -27.15], [-55.85, -27.30], [-56.60, -27.35],
-      [-57.30, -27.35], [-58.00, -27.10], [-58.35, -26.70], [-58.50, -26.10],
-      [-58.15, -25.60], [-57.85, -25.30], [-58.10, -25.05], [-58.70, -25.00],
-      [-59.45, -24.65], [-60.20, -24.20], [-60.95, -23.70], [-61.55, -23.20],
-      [-62.05, -22.70], [-62.65, -22.10]
-    ];
-
-    const puntosContorno = CONTORNO.map(p => geoA3D(p[1], p[0], 0));
-    const geoContorno = new THREE.BufferGeometry().setFromPoints(puntosContorno);
-    const lineaContorno = new THREE.Line(
-      geoContorno,
-      new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.9 }));
-    planoGrupo.add(lineaContorno);
-
-    const formaContorno = new THREE.Shape(puntosContorno.map(p => new THREE.Vector2(p.x, p.z)));
-    const geoRelleno = new THREE.ShapeGeometry(formaContorno);
-    geoRelleno.rotateX(Math.PI / 2);
-    const relleno = new THREE.Mesh(geoRelleno, new THREE.MeshBasicMaterial({
-      color: 0x00ffcc, transparent: true, opacity: 0.05, side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
-    }));
-    relleno.position.y = -0.12;
-    planoGrupo.add(relleno);
-
-    function crearRio(puntos, color) {
-      const curva = new THREE.CatmullRomCurve3(puntos.map(p => geoA3D(p[1], p[0], 0.05)));
-      const geo = new THREE.BufferGeometry().setFromPoints(curva.getPoints(90));
-      const linea = new THREE.Line(geo, new THREE.LineBasicMaterial({
-        color, transparent: true, opacity: 0.55
-      }));
-      planoGrupo.add(linea);
-      return linea;
+    function registrar(texto, tipo) {
+      const el = document.createElement('div');
+      el.className = 'evento ' + (tipo || '');
+      el.innerHTML = '<span class="hora">' + hora() + '</span>' + texto;
+      consola.prepend(el);
+      while (consola.childElementCount > 100) consola.removeChild(consola.lastChild);
     }
 
-    const RIO_PARAGUAY = [
-      [-58.16, -20.16], [-58.05, -21.10], [-57.95, -22.10], [-57.85, -23.10],
-      [-57.68, -24.10], [-57.58, -25.05], [-57.55, -25.30], [-57.85, -26.00],
-      [-58.15, -26.60], [-58.38, -27.15]
-    ];
-    const RIO_PARANA = [
-      [-54.60, -25.55], [-54.55, -26.05], [-54.45, -26.55], [-54.70, -26.90],
-      [-55.20, -27.15], [-55.85, -27.30], [-56.60, -27.35], [-57.30, -27.35], [-58.05, -27.20]
-    ];
-    const RIO_PILCOMAYO = [
-      [-62.60, -22.15], [-61.80, -22.90], [-61.00, -23.55], [-60.20, -24.10],
-      [-59.40, -24.55], [-58.65, -24.95], [-58.15, -25.25]
-    ];
-
-    const rioParaguay = crearRio(RIO_PARAGUAY, 0x2fa8ff);
-    crearRio(RIO_PARANA, 0x2fa8ff);
-    crearRio(RIO_PILCOMAYO, 0x2fa8ff);
-
-    /* ===================== NODOS DE DEPARTAMENTOS ===================== */
-    const nodosDept = [];
-    const seleccionables = [];
-
-    function crearEtiqueta(texto, color, ancho) {
-      const c = document.createElement('canvas');
-      c.width = 512;
-      c.height = 128;
-      const g = c.getContext('2d');
-      g.fillStyle = 'rgba(4, 22, 24, 0)';
-      g.fillRect(0, 0, 512, 128);
-      g.font = '600 38px Orbitron, sans-serif';
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      g.fillStyle = color || '#aef7e9';
-      g.shadowColor = color || '#00ffcc';
-      g.shadowBlur = 18;
-      g.fillText(texto.toUpperCase(), 256, 64);
-      const tex = new THREE.CanvasTexture(c);
-      tex.minFilter = THREE.LinearFilter;
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: tex, transparent: true, depthWrite: false
-      }));
-      const escala = ancho || 1;
-      sprite.scale.set(13 * escala, 3.25 * escala, 1);
-      return sprite;
+    function actualizarEntrega() {
+      elEntrega.textContent = 'REGALOS: ' + regalosTotales.toLocaleString('es-PY') + ' · ENTREGAS: ' + entregas + ' / 18';
     }
 
-    const etiquetaChaco = crearEtiqueta('CHACO', '#ffd700', 1.5);
-    etiquetaChaco.position.copy(geoA3D(-23.6, -60.4, 1.2));
-    planoGrupo.add(etiquetaChaco);
-
-    const etiquetaOriental = crearEtiqueta('REGIÓN ORIENTAL', '#00ffcc', 1.6);
-    etiquetaOriental.position.copy(geoA3D(-24.9, -55.9, 1.2));
-    planoGrupo.add(etiquetaOriental);
-
-    DEPARTAMENTOS.forEach((d, i) => {
-      const pos = geoA3D(d.lat, d.lon, 0);
-      const grupo = new THREE.Group();
-      grupo.position.copy(pos);
-
-      const anillo = new THREE.Mesh(
-        new THREE.TorusGeometry(2.1, 0.14, 8, 34),
-        new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 }));
-      anillo.rotation.x = -Math.PI / 2;
-      grupo.add(anillo);
-
-      const pilar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.28, ALTURA_NODO, 10),
-        new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.35 }));
-      pilar.position.y = ALTURA_NODO / 2;
-      grupo.add(pilar);
-
-      const esfera = new THREE.Mesh(
-        new THREE.SphereGeometry(0.62, 16, 16),
-        new THREE.MeshStandardMaterial({
-          color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.4,
-          roughness: 0.3, metalness: 0.4
-        }));
-      esfera.position.y = ALTURA_NODO;
-      esfera.userData.indice = i;
-      grupo.add(esfera);
-      seleccionables.push(esfera);
-
-      const etiqueta = crearEtiqueta(d.n);
-      etiqueta.position.y = ALTURA_NODO + 2.6;
-      grupo.add(etiqueta);
-
-      planoGrupo.add(grupo);
-      nodosDept.push({ datos: d, grupo, anillo, esfera, etiqueta, pulso: 0, hover: 0 });
-    });
-
-    /* ===================== TRINEO AAA ===================== */
-    const matCuerpo = new THREE.MeshStandardMaterial({
-      color: 0xff1e42, emissive: 0x5c000f, emissiveIntensity: 0.35,
-      roughness: 0.18, metalness: 0.9
-    });
-    const matOro = new THREE.MeshStandardMaterial({
-      color: 0xffd700, emissive: 0x6b4e00, emissiveIntensity: 0.45,
-      roughness: 0.16, metalness: 1.0
-    });
-
-    const trineo = new THREE.Group();
-
-    function perfilCasco() {
-      const s = new THREE.Shape();
-      s.moveTo(-3.1, 0);
-      s.lineTo(2.7, 0);
-      s.quadraticCurveTo(3.3, 0, 3.5, 0.45);
-      s.quadraticCurveTo(3.8, 1.0, 3.7, 1.5);
-      s.quadraticCurveTo(3.55, 2.1, 3.0, 2.18);
-      s.quadraticCurveTo(2.45, 2.25, 2.35, 1.8);
-      s.quadraticCurveTo(2.3, 1.52, 2.6, 1.45);
-      s.lineTo(2.5, 0.5);
-      s.lineTo(-2.7, 0.5);
-      s.lineTo(-2.95, 2.7);
-      s.quadraticCurveTo(-3.45, 3.0, -3.7, 2.6);
-      s.quadraticCurveTo(-3.95, 2.15, -3.45, 1.85);
-      s.lineTo(-3.1, 1.85);
-      s.closePath();
-      return s;
+    function mostrarSector(d, estado) {
+      elDept.textContent = d.romano + ' · ' + d.nombre;
+      elCapital.textContent = d.capital;
+      elPoblacion.textContent = d.poblacionTexto;
+      elEstado.textContent = estado;
     }
 
-    const prof = 3.8;
-    const casco = new THREE.Mesh(new THREE.ExtrudeGeometry(perfilCasco(), {
-      depth: prof, bevelEnabled: true, bevelThickness: 0.08,
-      bevelSize: 0.08, bevelSegments: 3, curveSegments: 10
-    }), matCuerpo);
-    casco.position.z = -prof / 2;
-    casco.castShadow = true;
-    trineo.add(casco);
+    async function cargarJson(ruta) {
+      const respuesta = await fetch(ruta, { cache: 'no-store' });
+      if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status + ' en ' + ruta);
+      return respuesta.json();
+    }
 
-    const patines = [-1, 1].forEach(lado => {
-      const curva = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(-3.3, -0.5, 0),
-        new THREE.Vector3(0.7, -0.7, 0),
-        new THREE.Vector3(3.2, -0.7, 0),
-        new THREE.Vector3(3.95, 1.3, 0));
-      const runner = new THREE.Mesh(new THREE.TubeGeometry(curva, 34, 0.17, 8, false), matOro);
-      const grupoPatin = new THREE.Group();
-      grupoPatin.add(runner);
-      grupoPatin.position.z = lado * (prof / 2 - 0.2);
-      trineo.add(grupoPatin);
-    });
+    let escena;
+    let camara;
+    let controles;
+    let renderizador;
+    let renderizadorEtiquetas;
+    let geojson;
+    let pais;
+    let proyeccion;
+    let centroPais;
 
-    const CAJA_ESTILOS = [
-      { cuerpo: 0x1fa84a, cinta: 0xffffff },
-      { cuerpo: 0x1e5cff, cinta: 0xffd700 },
-      { cuerpo: 0xffd700, cinta: 0xff1e42 },
-      { cuerpo: 0xf4f8ff, cinta: 0xff1e42 }
-    ];
+    let mapaDept = [];
+    let nodosDept = [];
+    let seleccionables = [];
+    let rutaOrden = [];
+    let curvaRuta;
+    let trineo;
+    let auraTrineo;
+    let luzOro;
+    let rejilla;
+    let grupoMapa;
+    let indiceSectorActivo = -1;
+    let ultimoControlSector = -1;
 
-    let semilla = 11;
-    function rnd() { semilla = (semilla * 16807) % 2147483647; return semilla / 2147483647; }
+    function proyectar(lon, lat) {
+      const p = proyeccion([lon, lat]);
+      return { x: p[0] - ANCHO_MAPA / 2, z: p[1] - ALTO_MAPA / 2 };
+    }
 
-    for (let i = 0; i < 5; i++) {
-      const lado = 0.75 + rnd() * 0.35;
-      const altura = lado * (0.85 + rnd() * 0.25);
-      const estilo = CAJA_ESTILOS[i % CAJA_ESTILOS.length];
-      const caja = new THREE.Group();
-      caja.add(new THREE.Mesh(new THREE.BoxGeometry(lado, altura, lado),
-        new THREE.MeshStandardMaterial({
-          color: estilo.cuerpo, roughness: 0.45, metalness: 0.15,
-          emissive: estilo.cuerpo, emissiveIntensity: 0.15
-        })));
-      const matCinta = new THREE.MeshStandardMaterial({
-        color: estilo.cinta, roughness: 0.25, metalness: 0.5,
-        emissive: estilo.cinta, emissiveIntensity: 0.3
+    function invertir(x, z) {
+      const p = proyeccion.invert([x + ANCHO_MAPA / 2, z + ALTO_MAPA / 2]);
+      return { lon: p[0], lat: p[1] };
+    }
+
+    function poligonosDe(feature) {
+      const c = feature.geometry.coordinates;
+      return feature.geometry.type === 'Polygon' ? [c] : c;
+    }
+
+    function crearForma(anillo) {
+      const forma = new THREE.Shape();
+      anillo.forEach((punto, i) => {
+        const q = proyectar(punto[0], punto[1]);
+        if (i === 0) forma.moveTo(q.x, -q.z);
+        else forma.lineTo(q.x, -q.z);
       });
-      const aw = lado * 0.16;
-      caja.add(new THREE.Mesh(new THREE.BoxGeometry(aw, altura + 0.05, lado + 0.06), matCinta));
-      caja.add(new THREE.Mesh(new THREE.BoxGeometry(lado + 0.06, altura + 0.05, aw), matCinta));
-      caja.position.set((rnd() - 0.5) * 3, altura / 2 + 0.55, (rnd() - 0.5) * 2.2);
-      trineo.add(caja);
+      forma.closePath();
+      return forma;
     }
 
-    trineo.scale.setScalar(1.5);
-    planoGrupo.add(trineo);
+    function crearFormas(feature) {
+      return poligonosDe(feature).map((poligono) => {
+        const forma = crearForma(poligono[0]);
+        for (let k = 1; k < poligono.length; k++) {
+          const agujero = new THREE.Path();
+          poligono[k].forEach((punto, i) => {
+            const q = proyectar(punto[0], punto[1]);
+            if (i === 0) agujero.moveTo(q.x, -q.z);
+            else agujero.lineTo(q.x, -q.z);
+          });
+          agujero.closePath();
+          forma.holes.push(agujero);
+        }
+        return forma;
+      });
+    }
 
-    const auraTrineo = new THREE.PointLight(0xffd700, 1.4, 90);
-    escena.add(auraTrineo);
+    function coordenadasDeAnillo(anillo) {
+      return anillo.map((punto) => {
+        const q = proyectar(punto[0], punto[1]);
+        return [q.x, q.z];
+      });
+    }
 
-    /* ===================== ESTELA DUAL ===================== */
-    const capaEstela = new THREE.Group();
-    escena.add(capaEstela);
+    function poloDeEtiqueta(feature) {
+      let mejor = null;
+      let mejorArea = -1;
+      for (const poligono of poligonosDe(feature)) {
+        const anillo = coordenadasDeAnillo(poligono[0]);
+        const area = Math.abs(THREE.ShapeUtils.area(anillo.map((p) => new THREE.Vector2(p[0], p[1]))));
+        if (area > mejorArea) {
+          mejorArea = area;
+          mejor = poligono;
+        }
+      }
+      const anillos = mejor.map((anillo) => coordenadasDeAnillo(anillo));
+      const superficie = (anillo) => {
+        let suma = 0;
+        for (let i = 0; i < anillo.length; i++) {
+          const [x1, z1] = anillo[i];
+          const [x2, z2] = anillo[(i + 1) % anillo.length];
+          suma += x1 * z2 - x2 * z1;
+        }
+        return suma;
+      };
+      if (superficie(anillos[0]) < 0) anillos[0].reverse();
+      for (let k = 1; k < anillos.length; k++) {
+        if (superficie(anillos[k]) > 0) anillos[k].reverse();
+      }
+      const punto = polylabel(anillos, 0.2);
+      return { x: punto[0], z: punto[1] };
+    }
+
+    function dentroDelPais(pos) {
+      const g = invertir(pos.x, pos.z);
+      return geoContains(pais, [g.lon, g.lat]);
+    }
+
+    function corregirDentro(pos) {
+      if (dentroDelPais(pos)) return pos.clone();
+      const destino = centroPais.clone();
+      for (let f = 0.9; f >= 0.1; f -= 0.1) {
+        const prueba = pos.clone().lerp(destino, f);
+        if (dentroDelPais(prueba)) return prueba;
+      }
+      return destino.clone();
+    }
+
+    function crearEtiquetaSector(feature, indice) {
+      const punto = poloDeEtiqueta(feature);
+      const pequena = ['Asunción', 'Central', 'Cordillera', 'Guairá', 'Paraguarí'].includes(feature.properties.nombre);
+      const desplazamientos = {
+        'Asunción': [-22, -8],
+        'Central': [20, 9],
+        'Cordillera': [19, -12],
+        'Guairá': [22, -1],
+        'Paraguarí': [15, 15]
+      };
+      let lx = punto.x;
+      let lz = punto.z;
+      if (pequena) {
+        const d = desplazamientos[feature.properties.nombre] || [16, 0];
+        lx += d[0];
+        lz += d[1];
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(punto.x, ALTURA_MAPA + 0.12, punto.z),
+          new THREE.Vector3(lx, ALTURA_MAPA + 0.12, lz)
+        ]);
+        grupoMapa.add(new THREE.Line(geo, new THREE.LineBasicMaterial({
+          color: 0xffd700, transparent: true, opacity: 0.45
+        })));
+      }
+      const div = document.createElement('div');
+      div.className = 'etiqueta-depto' + (pequena ? ' pequena' : '');
+      div.textContent = feature.properties.nombre;
+      const etiqueta = new CSS2DObject(div);
+      etiqueta.position.set(lx, ALTURA_MAPA + 0.2, lz);
+      escena.add(etiqueta);
+    }
+
+    function construirMapa() {
+      const paleta = [0x0f8f7a, 0x12a08a, 0x1bb39a, 0x0d7d6c, 0x159c84];
+      geojson.features.forEach((feature, i) => {
+        const formas = crearFormas(feature);
+        const geometria = new THREE.ExtrudeGeometry(formas, {
+          depth: ALTURA_MAPA, bevelEnabled: false, curveSegments: 1
+        });
+        geometria.rotateX(-Math.PI / 2);
+
+        const material = new THREE.MeshStandardMaterial({
+          color: paleta[i % paleta.length],
+          emissive: 0x00ffcc,
+          emissiveIntensity: 0.16,
+          transparent: true,
+          opacity: 0.46,
+          side: THREE.DoubleSide,
+          roughness: 0.55,
+          metalness: 0.25,
+          depthWrite: false
+        });
+        const malla = new THREE.Mesh(geometria, material);
+        const bordes = new THREE.LineSegments(
+          new THREE.EdgesGeometry(geometria, 24),
+          new THREE.LineBasicMaterial({ color: 0x54ffe0, transparent: true, opacity: 0.55 })
+        );
+        const grupo = new THREE.Group();
+        grupo.add(malla);
+        grupo.add(bordes);
+        grupoMapa.add(grupo);
+
+        const cap = proyectar(feature.properties.capitalLon, feature.properties.capitalLat);
+        const nodo = new THREE.Group();
+        nodo.position.set(cap.x, ALTURA_MAPA, cap.z);
+
+        const anillo = new THREE.Mesh(
+          new THREE.TorusGeometry(1.9, 0.12, 8, 34),
+          new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.8 }));
+        anillo.rotation.x = -Math.PI / 2;
+        nodo.add(anillo);
+
+        const pilar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.22, 0.22, ALTURA_NODO, 10),
+          new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.35 }));
+        pilar.position.y = ALTURA_NODO / 2;
+        nodo.add(pilar);
+
+        const esfera = new THREE.Mesh(
+          new THREE.SphereGeometry(0.58, 16, 16),
+          new THREE.MeshStandardMaterial({
+            color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.4,
+            roughness: 0.3, metalness: 0.4
+          }));
+        esfera.position.y = ALTURA_NODO;
+        esfera.userData.indice = i;
+        nodo.add(esfera);
+        seleccionables.push(esfera);
+
+        grupoMapa.add(nodo);
+        mapaDept.push({ feature, grupo, malla, material, nodo, anillo, esfera, pulso: 0, hover: 0 });
+        nodosDept.push({
+          datos: feature.properties,
+          posicion: new THREE.Vector3(cap.x, ALTURA_NODO + ALTURA_MAPA, cap.z),
+          grupo: nodo,
+          anillo,
+          esfera,
+          pulso: 0,
+          hover: 0
+        });
+        crearEtiquetaSector(feature, i);
+      });
+    }
+
+    function construirContornoYrios(contorno, rios) {
+      const anillosContorno = contorno.features[0].geometry.type === 'Polygon'
+        ? [contorno.features[0].geometry.coordinates]
+        : contorno.features[0].geometry.coordinates;
+      for (const poligono of anillosContorno) {
+        for (const anillo of poligono) {
+          const puntos = anillo.map((p) => {
+            const q = proyectar(p[0], p[1]);
+            return new THREE.Vector3(q.x, ALTURA_MAPA + 0.05, q.z);
+          });
+          grupoMapa.add(new THREE.LineLoop(
+            new THREE.BufferGeometry().setFromPoints(puntos),
+            new THREE.LineBasicMaterial({ color: 0x9dfff0, transparent: true, opacity: 0.95 })
+          ));
+        }
+      }
+
+      for (const feature of rios.features) {
+        const partes = feature.geometry.type === 'LineString'
+          ? [feature.geometry.coordinates]
+          : feature.geometry.coordinates;
+        for (const parte of partes) {
+          const puntos = parte.map((p) => {
+            const q = proyectar(p[0], p[1]);
+            return new THREE.Vector3(q.x, ALTURA_MAPA + 0.04, q.z);
+          });
+          grupoMapa.add(new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(puntos),
+            new THREE.LineBasicMaterial({ color: 0x2fa8ff, transparent: true, opacity: 0.75 })
+          ));
+        }
+      }
+
+      const etiquetaChaco = document.createElement('div');
+      etiquetaChaco.className = 'etiqueta-depto';
+      etiquetaChaco.style.color = '#ffd700';
+      etiquetaChaco.textContent = 'CHACO';
+      const objChaco = new CSS2DObject(etiquetaChaco);
+      const cao = proyectar(-59.6, -23.4);
+      objChaco.position.set(cao.x, ALTURA_MAPA + 0.4, cao.z);
+      escena.add(objChaco);
+
+      const etiquetaOriental = document.createElement('div');
+      etiquetaOriental.className = 'etiqueta-depto';
+      etiquetaOriental.textContent = 'REGIÓN ORIENTAL';
+      const objOriental = new CSS2DObject(etiquetaOriental);
+      const ori = proyectar(-55.9, -25.6);
+      objOriental.position.set(ori.x, ALTURA_MAPA + 0.4, ori.z);
+      escena.add(objOriental);
+    }
+
+    function construirRuta() {
+      const asuncion = nodosDept.find((n) => n.datos.nombre === 'Asunción');
+      const resto = nodosDept.filter((n) => n.datos.nombre !== 'Asunción');
+      const chaco = ['Alto Paraguay', 'Boquerón', 'Presidente Hayes'];
+      const oriental = resto
+        .filter((n) => !chaco.includes(n.datos.nombre))
+        .sort((a, b) => b.datos.capitalLat - a.datos.capitalLat);
+      const chaqueños = resto
+        .filter((n) => chaco.includes(n.datos.nombre))
+        .sort((a, b) => b.datos.capitalLat - a.datos.capitalLat);
+      const orden = [asuncion, ...oriental, ...chaqueños];
+
+      const puntos = orden.map((n) => {
+        const p = n.posicion.clone();
+        p.y = ALTURA_NODO + ALTURA_MAPA + 0.4;
+        return corregirDentro(p);
+      });
+
+      curvaRuta = new THREE.CatmullRomCurve3(puntos, true, 'centripetal', 0.5);
+      const muestras = curvaRuta.getPoints(420).map((p) => corregirDentro(p));
+      const curvaCorregida = new THREE.CatmullRomCurve3(muestras, true, 'centripetal', 0.5);
+      curvaRuta = curvaCorregida;
+
+      const geoSpline = new THREE.BufferGeometry().setFromPoints(curvaRuta.getPoints(300));
+      grupoMapa.add(new THREE.Line(geoSpline, new THREE.LineBasicMaterial({
+        color: 0x00ffcc, transparent: true, opacity: 0.38
+      })));
+
+      rutaOrden = orden;
+      nodosDept = orden;
+    }
+
+    let indiceActual = 0;
+    let segmento = null;
+
+    function iniciarTramo(t) {
+      const hacia = (indiceActual + 1) % nodosDept.length;
+      segmento = { inicio: t, destinoIdx: hacia };
+      const destino = nodosDept[hacia].datos;
+      mostrarSector(destino, 'EN VUELO · ' + destino.regalos + ' REGALOS');
+      registrar('Ruta trazada hacia ' + destino.romano + ' ' + destino.nombre + ' (' + destino.capital + ')', '');
+    }
+
+    function actualizarTrineo(t, dt) {
+      if (!segmento) iniciarTramo(t);
+      const k = Math.min(1, (t - segmento.inicio) / DURACION_TRAMO);
+      const e = k * k * (3 - 2 * k);
+      const u = ((indiceActual + e) / nodosDept.length) % 1;
+
+      const pos = corregirDentro(curvaRuta.getPoint(u));
+      trineo.position.copy(pos);
+      trineo.position.y += Math.sin(t * 4.5) * 0.18;
+
+      const adelanto = corregirDentro(curvaRuta.getPoint((u + 0.015) % 1));
+      trineo.lookAt(adelanto.x, trineo.position.y, adelanto.z);
+
+      auraTrineo.position.copy(trineo.position);
+      luzOro.position.copy(trineo.position);
+      if (Math.random() > 0.35) pintarEstela(trineo.position);
+      actualizarEstela(dt);
+
+      nodosDept.forEach((nd) => {
+        if (nd.pulso > 0) nd.pulso = Math.max(0, nd.pulso - dt * 1.6);
+        if (nd.hover > 0) nd.hover = Math.max(0, nd.hover - dt * 3.0);
+        const brillo = Math.max(nd.pulso, nd.hover * 0.6);
+        nd.anillo.scale.setScalar(1 + brillo * 0.9);
+        nd.esfera.scale.setScalar(1 + brillo * 1.1);
+        nd.esfera.material.emissiveIntensity = 1.4 + brillo * 2.2;
+      });
+
+      const gi = invertir(pos.x, pos.z);
+      document.getElementById('lat').textContent = gi.lat.toFixed(3);
+      document.getElementById('lon').textContent = gi.lon.toFixed(3);
+
+      if (t - ultimoControlSector > 0.12) {
+        ultimoControlSector = t;
+        let activo = -1;
+        for (let i = 0; i < geojson.features.length; i++) {
+          if (geoContains(geojson.features[i], [gi.lon, gi.lat])) { activo = i; break; }
+        }
+        if (activo >= 0 && activo !== indiceSectorActivo) {
+          if (indiceSectorActivo >= 0) {
+            const anterior = mapaDept[indiceSectorActivo];
+            anterior.grupo.position.y = 0;
+            anterior.material.emissiveIntensity = 0.16;
+            anterior.material.opacity = 0.46;
+          }
+          indiceSectorActivo = activo;
+          const actual = mapaDept[activo];
+          actual.grupo.position.y = 0.9;
+          actual.material.emissiveIntensity = 0.75;
+          actual.material.opacity = 0.6;
+          const d = actual.feature.properties;
+          mostrarSector(d, entregados.has(d.nombre) ? d.regalos + ' / ' + d.regalos + ' ENTREGADOS' : 'PENDIENTE · ' + d.regalos + ' REGALOS');
+        }
+      }
+
+      if (k >= 1) {
+        const destino = nodosDept[segmento.destinoIdx];
+        destino.pulso = 1;
+        if (!entregados.has(destino.datos.nombre)) {
+          entregados.add(destino.datos.nombre);
+          entregas++;
+          regalosTotales += destino.datos.regalos;
+        }
+        actualizarEntrega();
+        mostrarSector(destino.datos, 'SECTOR COMPLETADO · ' + destino.datos.regalos + ' / ' + destino.datos.regalos + ' REGALOS');
+        registrar('Entrega confirmada en ' + destino.datos.romano + ' ' + destino.datos.nombre + ' · ' + destino.datos.capital + ' · ' + destino.datos.regalos + ' regalos · ' + destino.datos.capitalLat.toFixed(3) + ', ' + destino.datos.capitalLon.toFixed(3), 'oro');
+        indiceActual = segmento.destinoIdx;
+        segmento = null;
+      }
+    }
+
+    let capaEstela;
     const COLOR_ESTELA = [0xff1e42, 0xffd700];
     const poolsEstela = [[], []];
     let contadorEstela = 0;
@@ -569,7 +751,7 @@
       const idx = contadorEstela % 2;
       contadorEstela++;
       const pool = poolsEstela[idx];
-      let p = pool.find(x => !x.visible);
+      let p = pool.find((x) => !x.visible);
       if (!p) {
         p = new THREE.Mesh(
           new THREE.SphereGeometry(0.4, 6, 6),
@@ -599,207 +781,307 @@
       }
     }
 
-    /* ===================== CONSOLA Y HUD ===================== */
-    const consola = document.getElementById('consola');
-    const badge = document.getElementById('badge');
-    const badgeTexto = document.getElementById('badgeTexto');
-    const elDept = document.getElementById('deptActual');
-    const elCapital = document.getElementById('capital');
-    const elPoblacion = document.getElementById('poblacion');
-    const elEstado = document.getElementById('estadoEntrega');
-    const elEntrega = document.getElementById('entrega');
-    let entregas = 0;
-    let regalosTotales = 0;
-    const entregados = new Set();
-
-    function hora() {
-      return new Date().toTimeString().slice(0, 8);
-    }
-
-    function registrar(texto, tipo) {
-      const el = document.createElement('div');
-      el.className = 'evento ' + (tipo || '');
-      el.innerHTML = '<span class="hora">' + hora() + '</span>' + texto;
-      consola.prepend(el);
-      while (consola.childElementCount > 100) consola.removeChild(consola.lastChild);
-    }
-
-    function actualizarEntrega() {
-      elEntrega.textContent = 'REGALOS: ' + regalosTotales.toLocaleString('es-PY') + ' · ENTREGAS: ' + entregas + ' / 18';
-    }
-
-    function mostrarSector(d, estado) {
-      elDept.textContent = d.codigo + ' · ' + d.n;
-      elCapital.textContent = d.capital;
-      elPoblacion.textContent = d.poblacionTexto;
-      elEstado.textContent = estado;
-    }
-
-    /* ===================== RECORRIDO SPLINE GEOREFERENCIADO ===================== */
-    const puntosSpline = nodosDept.map((nd, i) => {
-      const p = geoA3D(nd.datos.lat, nd.datos.lon, ALTURA_NODO + 0.6);
-      if (i === 0) p.y += 1.2;
-      return p;
-    });
-    const curvaRuta = new THREE.CatmullRomCurve3(puntosSpline, true, 'centripetal', 0.5);
-    const geoSpline = new THREE.BufferGeometry().setFromPoints(curvaRuta.getPoints(300));
-    const lineaRuta = new THREE.Line(geoSpline, new THREE.LineBasicMaterial({
-      color: 0x00ffcc, transparent: true, opacity: 0.38
-    }));
-    planoGrupo.add(lineaRuta);
-
-    const N_SECTORES = nodosDept.length;
-    let indiceActual = 0;
-    let segmento = null;
-    const DURACION_TRAMO = 3.1;
-
-    function iniciarTramo(t) {
-      const hacia = (indiceActual + 1) % N_SECTORES;
-      segmento = { inicio: t, destinoIdx: hacia };
-      const destino = nodosDept[hacia].datos;
-      mostrarSector(destino, 'EN VUELO · ' + destino.regalos + ' REGALOS');
-      registrar('Ruta trazada hacia ' + destino.codigo + ' ' + destino.n + ' (' + destino.capital + ')', '');
-    }
-
-    function actualizarTrineo(t, dt) {
-      if (!segmento) iniciarTramo(t);
-      const k = Math.min(1, (t - segmento.inicio) / DURACION_TRAMO);
-      const e = k * k * (3 - 2 * k);
-      const u = ((indiceActual + e) / N_SECTORES) % 1;
-
-      const pos = curvaRuta.getPoint(u);
-      trineo.position.copy(pos);
-      trineo.position.y += Math.sin(t * 4.5) * 0.18;
-
-      const adelanto = curvaRuta.getPoint((u + 0.015) % 1);
-      trineo.lookAt(adelanto.x, trineo.position.y, adelanto.z);
-
-      auraTrineo.position.copy(trineo.position);
-      luzOro.position.copy(trineo.position);
-      if (Math.random() > 0.35) pintarEstela(trineo.position);
-      actualizarEstela(dt);
-
-      nodosDept.forEach((nd) => {
-        if (nd.pulso > 0) nd.pulso = Math.max(0, nd.pulso - dt * 1.6);
-        if (nd.hover > 0) nd.hover = Math.max(0, nd.hover - dt * 3.0);
-        const brillo = Math.max(nd.pulso, nd.hover * 0.6);
-        nd.anillo.scale.setScalar(1 + brillo * 0.9);
-        nd.esfera.scale.setScalar(1 + brillo * 1.1);
-        nd.esfera.material.emissiveIntensity = 1.4 + brillo * 2.2;
+    function construirTrineo() {
+      const matCuerpo = new THREE.MeshStandardMaterial({
+        color: 0xff1e42, emissive: 0x5c000f, emissiveIntensity: 0.35,
+        roughness: 0.18, metalness: 0.9
+      });
+      const matOro = new THREE.MeshStandardMaterial({
+        color: 0xffd700, emissive: 0x6b4e00, emissiveIntensity: 0.45,
+        roughness: 0.16, metalness: 1.0
       });
 
-      if (k >= 1) {
-        const destino = nodosDept[segmento.destinoIdx];
-        destino.pulso = 1;
-        if (!entregados.has(segmento.destinoIdx)) {
-          entregados.add(segmento.destinoIdx);
-          entregas++;
-          regalosTotales += destino.datos.regalos;
-        }
-        actualizarEntrega();
-        mostrarSector(destino.datos, 'SECTOR COMPLETADO · ' + destino.datos.regalos + ' / ' + destino.datos.regalos + ' REGALOS');
-        registrar('Entrega confirmada en ' + destino.datos.codigo + ' ' + destino.datos.n + ' · ' + destino.datos.capital + ' · ' + destino.datos.regalos + ' regalos · ' + destino.datos.lat.toFixed(2) + ', ' + destino.datos.lon.toFixed(2), 'oro');
-        indiceActual = segmento.destinoIdx;
-        segmento = null;
+      trineo = new THREE.Group();
+
+      const s = new THREE.Shape();
+      s.moveTo(-3.1, 0);
+      s.lineTo(2.7, 0);
+      s.quadraticCurveTo(3.3, 0, 3.5, 0.45);
+      s.quadraticCurveTo(3.8, 1.0, 3.7, 1.5);
+      s.quadraticCurveTo(3.55, 2.1, 3.0, 2.18);
+      s.quadraticCurveTo(2.45, 2.25, 2.35, 1.8);
+      s.quadraticCurveTo(2.3, 1.52, 2.6, 1.45);
+      s.lineTo(2.5, 0.5);
+      s.lineTo(-2.7, 0.5);
+      s.lineTo(-2.95, 2.7);
+      s.quadraticCurveTo(-3.45, 3.0, -3.7, 2.6);
+      s.quadraticCurveTo(-3.95, 2.15, -3.45, 1.85);
+      s.lineTo(-3.1, 1.85);
+      s.closePath();
+
+      const prof = 3.8;
+      const casco = new THREE.Mesh(new THREE.ExtrudeGeometry(s, {
+        depth: prof, bevelEnabled: true, bevelThickness: 0.08,
+        bevelSize: 0.08, bevelSegments: 3, curveSegments: 10
+      }), matCuerpo);
+      casco.position.z = -prof / 2;
+      trineo.add(casco);
+
+      [-1, 1].forEach((lado) => {
+        const curva = new THREE.CubicBezierCurve3(
+          new THREE.Vector3(-3.3, -0.5, 0),
+          new THREE.Vector3(0.7, -0.7, 0),
+          new THREE.Vector3(3.2, -0.7, 0),
+          new THREE.Vector3(3.95, 1.3, 0));
+        const runner = new THREE.Mesh(new THREE.TubeGeometry(curva, 34, 0.17, 8, false), matOro);
+        const grupoPatin = new THREE.Group();
+        grupoPatin.add(runner);
+        grupoPatin.position.z = lado * (prof / 2 - 0.2);
+        trineo.add(grupoPatin);
+      });
+
+      const CAJA_ESTILOS = [
+        { cuerpo: 0x1fa84a, cinta: 0xffffff },
+        { cuerpo: 0x1e5cff, cinta: 0xffd700 },
+        { cuerpo: 0xffd700, cinta: 0xff1e42 },
+        { cuerpo: 0xf4f8ff, cinta: 0xff1e42 }
+      ];
+
+      let semilla = 11;
+      function rnd() { semilla = (semilla * 16807) % 2147483647; return semilla / 2147483647; }
+
+      for (let i = 0; i < 5; i++) {
+        const lado = 0.75 + rnd() * 0.35;
+        const altura = lado * (0.85 + rnd() * 0.25);
+        const estilo = CAJA_ESTILOS[i % CAJA_ESTILOS.length];
+        const caja = new THREE.Group();
+        caja.add(new THREE.Mesh(new THREE.BoxGeometry(lado, altura, lado),
+          new THREE.MeshStandardMaterial({
+            color: estilo.cuerpo, roughness: 0.45, metalness: 0.15,
+            emissive: estilo.cuerpo, emissiveIntensity: 0.15
+          })));
+        const matCinta = new THREE.MeshStandardMaterial({
+          color: estilo.cinta, roughness: 0.25, metalness: 0.5,
+          emissive: estilo.cinta, emissiveIntensity: 0.3
+        });
+        const aw = lado * 0.16;
+        caja.add(new THREE.Mesh(new THREE.BoxGeometry(aw, altura + 0.05, lado + 0.06), matCinta));
+        caja.add(new THREE.Mesh(new THREE.BoxGeometry(lado + 0.06, altura + 0.05, aw), matCinta));
+        caja.position.set((rnd() - 0.5) * 3, altura / 2 + 0.55, (rnd() - 0.5) * 2.2);
+        trineo.add(caja);
       }
+
+      trineo.scale.setScalar(1.5);
+      grupoMapa.add(trineo);
+
+      auraTrineo = new THREE.PointLight(0xffd700, 1.4, 90);
+      escena.add(auraTrineo);
+      capaEstela = new THREE.Group();
+      escena.add(capaEstela);
     }
 
-    /* ===================== INTERACTIVIDAD 3D (HOVER + CLICK) ===================== */
-    const raycaster = new THREE.Raycaster();
-    const puntero = new THREE.Vector2(9, 9);
-    let arrastre = false;
-    let inicioPuntero = { x: 0, y: 0 };
-
-    function nodoBajoElPuntero() {
-      raycaster.setFromCamera(puntero, camara);
-      const impactos = raycaster.intersectObjects(seleccionables, false);
-      return impactos.length > 0 ? impactos[0].object.userData.indice : -1;
-    }
-
-    canvas.addEventListener('pointermove', (ev) => {
-      const rect = canvas.getBoundingClientRect();
-      puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-      puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
-      const idx = nodoBajoElPuntero();
-      canvas.style.cursor = idx >= 0 ? 'pointer' : 'grab';
-      if (idx >= 0) nodosDept[idx].hover = 1;
-    });
-
-    canvas.addEventListener('pointerdown', (ev) => {
-      arrastre = false;
-      inicioPuntero = { x: ev.clientX, y: ev.clientY };
-    });
-
-    canvas.addEventListener('pointermove', (ev) => {
-      if (Math.hypot(ev.clientX - inicioPuntero.x, ev.clientY - inicioPuntero.y) > 6) arrastre = true;
-    });
-
-    canvas.addEventListener('click', (ev) => {
-      if (arrastre) return;
-      const rect = canvas.getBoundingClientRect();
-      puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
-      puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
-      const idx = nodoBajoElPuntero();
-      if (idx < 0) return;
-      const nd = nodosDept[idx];
-      nd.pulso = 1;
-      mostrarSector(nd.datos, nd.datos.regalos + ' / ' + nd.datos.regalos + ' REGALOS · CONSULTA TACTICA');
-      controles.target.lerp(nd.grupo.position, 0.65);
-      registrar('Consulta tactica: ' + nd.datos.codigo + ' ' + nd.datos.n + ' · ' + nd.datos.capital + ' · ' + nd.datos.poblacionTexto + ' hab. · ' + nd.datos.regalos + ' regalos programados', 'oro');
-    });
-
-    /* ===================== TELEMETRIA SSE ===================== */
     function conectar() {
+      let ultimoEvento = 0;
+      let enlaceRegistrado = false;
+      const marcarReconexion = () => {
+        if (Date.now() - ultimoEvento <= 3000) return;
+        badge.classList.add('offline');
+        badgeTexto.textContent = 'RECONECTANDO';
+      };
+      setInterval(marcarReconexion, 1000);
       const fuente = new EventSource('/api/vuelo/stream');
       fuente.onopen = () => {
+        ultimoEvento = Date.now();
         badge.classList.remove('offline');
         badgeTexto.textContent = 'EN LINEA';
-        registrar('Enlace de telemetria con el Polo Norte establecido', '');
+        if (!enlaceRegistrado) {
+          enlaceRegistrado = true;
+          registrar('Enlace de telemetria con el Polo Norte establecido', '');
+        }
       };
       fuente.onmessage = (evento) => {
+        ultimoEvento = Date.now();
+        badge.classList.remove('offline');
+        badgeTexto.textContent = 'EN LINEA';
         const d = JSON.parse(evento.data);
-        document.getElementById('lat').textContent = d.latitud.toFixed(2);
-        document.getElementById('lon').textContent = d.longitud.toFixed(2);
         document.getElementById('alt').textContent = d.altitud.toFixed(0) + ' m';
         document.getElementById('vel').textContent = d.velocidadKmh.toFixed(0) + ' km/h';
         document.getElementById('sec').textContent = d.secuencia;
       };
-      fuente.onerror = () => {
-        badge.classList.add('offline');
-        badgeTexto.textContent = 'RECONECTANDO';
-      };
+      fuente.onerror = marcarReconexion;
     }
 
-    /* ===================== RESIZE + BUCLE ===================== */
-    addEventListener('resize', () => {
-      camara.aspect = innerWidth / innerHeight;
-      camara.updateProjectionMatrix();
-      renderizador.setSize(innerWidth, innerHeight);
-    });
-
-    const reloj = new THREE.Clock();
-
-    function animar() {
-      const dt = Math.min(reloj.getDelta(), 0.05);
-      const t = reloj.getElapsedTime();
-
+    function restablecerVista() {
+      camara.position.set(0, 150, 110);
+      controles.target.set(0, 0, 0);
       controles.update();
-      actualizarTrineo(t, dt);
-
-      rejilla.material.opacity = 0.18 + Math.sin(t * 1.4) * 0.05;
-      lineaContorno.material.opacity = 0.6 + Math.sin(t * 1.1) * 0.18;
-      rioParaguay.material.opacity = 0.45 + Math.sin(t * 0.9) * 0.15;
-      luzCian.intensity = 1.0 + Math.sin(t * 1.3) * 0.3;
-
-      renderizador.render(escena, camara);
     }
 
-    conectar();
-    actualizarEntrega();
-    mostrarSector(DEPARTAMENTOS[0], 'EN VUELO · ' + DEPARTAMENTOS[0].regalos + ' REGALOS');
-    registrar('Radar tactico de Paraguay inicializado — silueta real · Chaco + Region Oriental · 18 entidades', 'oro');
-    registrar('Rio Paraguay, Rio Parana y Rio Pilcomayo trazados como referencia cartografica', '');
-    renderizador.setAnimationLoop(animar);
+    function prepararInteraccion() {
+      const raycaster = new THREE.Raycaster();
+      const puntero = new THREE.Vector2(9, 9);
+      let arrastre = false;
+      let inicioPuntero = { x: 0, y: 0 };
+
+      const nodoBajoElPuntero = () => {
+        raycaster.setFromCamera(puntero, camara);
+        const impactos = raycaster.intersectObjects(seleccionables, false);
+        return impactos.length > 0 ? impactos[0].object.userData.indice : -1;
+      };
+
+      const canvas = renderizador.domElement;
+      canvas.addEventListener('pointermove', (ev) => {
+        const rect = canvas.getBoundingClientRect();
+        puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+        puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+        const idx = nodoBajoElPuntero();
+        canvas.style.cursor = idx >= 0 ? 'pointer' : 'grab';
+        if (idx >= 0) {
+        const ndHover = nodosDept.find((n) => n.esfera.userData.indice === idx) || nodosDept[idx];
+        if (ndHover) ndHover.hover = 1;
+      }
+        if (Math.hypot(ev.clientX - inicioPuntero.x, ev.clientY - inicioPuntero.y) > 6) arrastre = true;
+      });
+
+      canvas.addEventListener('pointerdown', (ev) => {
+        arrastre = false;
+        inicioPuntero = { x: ev.clientX, y: ev.clientY };
+      });
+
+      canvas.addEventListener('click', (ev) => {
+        if (arrastre) return;
+        const rect = canvas.getBoundingClientRect();
+        puntero.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+        puntero.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+        const idx = nodoBajoElPuntero();
+        if (idx < 0) return;
+        const nd = nodosDept.find((n) => n.esfera.userData.indice === idx);
+        if (!nd) return;
+        nd.pulso = 1;
+        mostrarSector(nd.datos, nd.datos.regalos + ' / ' + nd.datos.regalos + ' REGALOS · CONSULTA TACTICA');
+        controles.target.set(nd.grupo.position.x, 0, nd.grupo.position.z);
+        registrar('Consulta tactica: ' + nd.datos.romano + ' ' + nd.datos.nombre + ' · ' + nd.datos.capital + ' · ' + nd.datos.poblacionTexto + ' hab. · ' + nd.datos.regalos + ' regalos programados', 'oro');
+      });
+
+      document.getElementById('resetVista').addEventListener('click', restablecerVista);
+    }
+
+    async function iniciar() {
+      try {
+        const [datos, contorno, rios] = await Promise.all([
+          cargarJson('./data/paraguay-departamentos.geojson'),
+          cargarJson('./data/paraguay-contorno.geojson'),
+          cargarJson('./data/paraguay-rios.geojson')
+        ]);
+        geojson = datos;
+        pais = datos;
+        proyeccion = geoMercator().fitSize([ANCHO_MAPA, ALTO_MAPA], geojson);
+
+        const centro = geoCentroid(geojson);
+        const cw = proyectar(centro[0], centro[1]);
+        centroPais = new THREE.Vector3(cw.x, ALTURA_NODO + ALTURA_MAPA, cw.z);
+
+        for (const f of geojson.features) {
+          const { capitalLat, capitalLon } = f.properties;
+          const q = proyectar(Number(capitalLon), Number(capitalLat));
+          const r = invertir(q.x, q.z);
+          const error = Math.hypot(r.lon - Number(capitalLon), r.lat - Number(capitalLat));
+          if (!(error < 0.001)) {
+            throw new Error('Proyeccion inconsistente en ' + f.properties.nombre + ': ' + error);
+          }
+        }
+
+        geojson.features.forEach((f) => {
+          f.properties.poblacionTexto = Number(f.properties.poblacion).toLocaleString('es-PY');
+          f.properties.regalos = Math.max(1, Math.round(Number(f.properties.poblacion) / 18000));
+        });
+
+        const canvas = document.getElementById('escena');
+        escena = new THREE.Scene();
+        escena.background = new THREE.Color(0x02080a);
+        escena.fog = new THREE.FogExp2(0x02080a, 0.0028);
+
+        camara = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 3000);
+        camara.position.set(0, 150, 110);
+
+        renderizador = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderizador.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderizador.setSize(innerWidth, innerHeight);
+
+        renderizadorEtiquetas = new CSS2DRenderer();
+        renderizadorEtiquetas.setSize(innerWidth, innerHeight);
+        renderizadorEtiquetas.domElement.style.position = 'fixed';
+        renderizadorEtiquetas.domElement.style.top = '0';
+        renderizadorEtiquetas.domElement.style.left = '0';
+        renderizadorEtiquetas.domElement.style.pointerEvents = 'none';
+        document.getElementById('etiquetas3d').appendChild(renderizadorEtiquetas.domElement);
+
+        controles = new OrbitControls(camara, renderizador.domElement);
+        controles.enableDamping = true;
+        controles.dampingFactor = 0.06;
+        controles.autoRotate = true;
+        controles.autoRotateSpeed = 0.25;
+        controles.minDistance = 90;
+        controles.maxDistance = 260;
+        controles.maxPolarAngle = Math.PI / 2.02;
+        controles.target.set(0, 0, 0);
+        controles.update();
+
+        escena.add(new THREE.AmbientLight(0x88ddff, 0.7));
+        const luzDir = new THREE.DirectionalLight(0xffffff, 1.4);
+        luzDir.position.set(80, 140, 90);
+        escena.add(luzDir);
+        const luzCian = new THREE.PointLight(0x00ffcc, 1.2, 600);
+        luzCian.position.set(0, 70, 0);
+        escena.add(luzCian);
+        luzOro = new THREE.PointLight(0xffd700, 0.9, 400);
+        luzOro.position.set(-70, 40, -40);
+        escena.add(luzOro);
+
+        grupoMapa = new THREE.Group();
+        escena.add(grupoMapa);
+
+        rejilla = new THREE.GridHelper(200, 40, 0x00ffcc, 0x0a3b3b);
+        rejilla.material.transparent = true;
+        rejilla.material.opacity = 0.16;
+        rejilla.position.y = -0.2;
+        grupoMapa.add(rejilla);
+
+        construirMapa();
+        construirContornoYrios(contorno, rios);
+        construirRuta();
+        construirTrineo();
+        prepararInteraccion();
+
+        capaCarga.classList.add('oculto');
+        actualizarEntrega();
+        mostrarSector(geojson.features[0].properties, 'PENDIENTE · ' + geojson.features[0].properties.regalos + ' REGALOS');
+        registrar('Radar tactico de Paraguay inicializado · 18 entidades desde GeoJSON geoBoundaries', 'oro');
+        registrar('Proyeccion Mercator unica · etiquetas polylabel · depto activo por geoContains', '');
+        registrar('Ríos Paraguay, Paraná y Pilcomayo recortados desde Natural Earth 10m', '');
+
+        conectar();
+
+        addEventListener('resize', () => {
+          camara.aspect = innerWidth / innerHeight;
+          camara.updateProjectionMatrix();
+          renderizador.setSize(innerWidth, innerHeight);
+          renderizadorEtiquetas.setSize(innerWidth, innerHeight);
+        });
+
+        const reloj = new THREE.Clock();
+
+        function animar() {
+          const dt = Math.min(reloj.getDelta(), 0.05);
+          const t = reloj.getElapsedTime();
+          controles.update();
+          actualizarTrineo(t, dt);
+          rejilla.material.opacity = 0.18 + Math.sin(t * 1.4) * 0.05;
+          luzCian.intensity = 1.0 + Math.sin(t * 1.3) * 0.3;
+          renderizador.render(escena, camara);
+          renderizadorEtiquetas.render(escena, camara);
+        }
+
+        renderizador.setAnimationLoop(animar);
+      } catch (error) {
+        capaCarga.textContent = 'ERROR DE CARTOGRAFÍA: ' + error.message;
+        badge.classList.add('offline');
+        badgeTexto.textContent = 'SIN DATOS';
+        registrar('Fallo al cargar la cartografia real: ' + error.message, 'rojo');
+      }
+    }
+
+    iniciar();
   </script>
 </body>
 </html>
