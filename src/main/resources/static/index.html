@@ -705,7 +705,7 @@
     composer.setSize(innerWidth, innerHeight);
     composer.addPass(new RenderPass(escena, camara));
 
-    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.05, 0.55, 0.2);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.4, 0.2);
     composer.addPass(bloom);
 
     const aberracion = new ShaderPass(AberracionShader);
@@ -1299,7 +1299,7 @@
       ab.intensidad.value += (estadoVuelo.aberracion * 0.05 - ab.intensidad.value) * Math.min(1, dt * 3);
       ab.distorsion.value += (estadoVuelo.aberracion * 0.22 - ab.distorsion.value) * Math.min(1, dt * 3);
       ab.tiempo.value = t;
-      bloom.strength = 1.05 + estadoVuelo.aberracion * 0.75 + Math.sin(t * 1.2) * 0.05;
+      bloom.strength = 0.45 + estadoVuelo.aberracion * 0.3 + Math.sin(t * 1.2) * 0.03;
 
       actualizarEstela(dt);
       posicionarTooltip();
