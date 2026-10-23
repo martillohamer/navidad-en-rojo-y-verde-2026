@@ -23,13 +23,16 @@ public class QuantumDashboardServer {
 
     public static final String RUTA_INDEX = "/";
     public static final String RUTA_NEXUS = "/nexus";
+    public static final String RUTA_PARAGUAY = "/paraguay";
     public static final String RUTA_HEALTH = "/health";
     public static final String RUTA_TELEMETRIA = "/api/telemetria";
     public static final String RUTA_STREAM = "/api/vuelo/stream";
     public static final String RECURSO_INDEX = "static/index.html";
     public static final String RECURSO_NEXUS = "static/nexus.html";
+    public static final String RECURSO_PARAGUAY = "static/paraguay.html";
     public static final String RUTA_FICHERO_INDEX = "src/main/resources/static/index.html";
     public static final String RUTA_FICHERO_NEXUS = "src/main/resources/static/nexus.html";
+    public static final String FICHERO_PARAGUAY = "src/main/resources/static/paraguay.html";
 
     public record Telemetria(long secuencia, double latitud, double longitud,
             double altitud, double velocidadKmh) {
@@ -70,6 +73,7 @@ public class QuantumDashboardServer {
         });
         this.servidor.createContext(RUTA_INDEX, this::gestionarIndex);
         this.servidor.createContext(RUTA_NEXUS, this::gestionarNexus);
+        this.servidor.createContext(RUTA_PARAGUAY, this::gestionarParaguay);
         this.servidor.createContext(RUTA_HEALTH, this::gestionarHealth);
         this.servidor.createContext(RUTA_TELEMETRIA, this::gestionarTelemetria);
         this.servidor.createContext(RUTA_STREAM, this::gestionarStream);
@@ -160,6 +164,10 @@ public class QuantumDashboardServer {
         servirHtml(intercambio, RUTA_FICHERO_NEXUS, RECURSO_NEXUS);
     }
 
+    private void gestionarParaguay(HttpExchange intercambio) throws IOException {
+        servirHtml(intercambio, FICHERO_PARAGUAY, RECURSO_PARAGUAY);
+    }
+
     private void servirHtml(HttpExchange intercambio, String rutaFichero, String recurso) throws IOException {
         byte[] html = leerHtml(rutaFichero, recurso);
         intercambio.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
@@ -196,20 +204,21 @@ public class QuantumDashboardServer {
     }
 
     private byte[] leerHtml(String rutaFichero, String recurso) throws IOException {
-        byte[] cache = cacheHtml.get(recurso);
+        String clave = rutaFichero + "|" + recurso;
+        byte[] cache = cacheHtml.get(clave);
         if (cache != null) {
             return cache;
         }
         Path fichero = Path.of(rutaFichero);
         if (Files.exists(fichero)) {
             byte[] bytes = Files.readAllBytes(fichero);
-            cacheHtml.put(recurso, bytes);
+            cacheHtml.put(clave, bytes);
             return bytes;
         }
         try (InputStream entrada = getClass().getClassLoader().getResourceAsStream(recurso)) {
             if (entrada != null) {
                 byte[] bytes = entrada.readAllBytes();
-                cacheHtml.put(recurso, bytes);
+                cacheHtml.put(clave, bytes);
                 return bytes;
             }
         }

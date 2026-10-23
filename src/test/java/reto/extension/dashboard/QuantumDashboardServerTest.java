@@ -73,6 +73,40 @@ class QuantumDashboardServerTest {
     }
 
     @Test
+    void testParaguaySirveElRadarDeParaguay() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> r = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_PARAGUAY);
+        assertEquals(200, r.statusCode());
+        assertTrue(r.headers().firstValue("Content-Type").orElse("").startsWith("text/html"));
+        assertTrue(r.body().contains("RADAR TÁCTICO DE PARAGUAY"));
+        assertTrue(r.body().contains("18 entidades"));
+        assertTrue(r.body().contains("RADAR TÁCTICO"));
+        assertTrue(r.body().contains("Asunción"));
+        assertTrue(r.body().contains("Boquerón"));
+        assertTrue(r.body().contains("CatmullRomCurve3"));
+        assertTrue(r.body().contains("position.set(0, 150, 110)"));
+        assertFalse(r.body().contains("RADAR 3D DEL POLO NORTE"));
+    }
+
+    @Test
+    void testRutasConvivenIndexNexusParaguay() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> index = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_INDEX);
+        HttpResponse<String> nexus = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_NEXUS);
+        HttpResponse<String> py = pedir(servidor.puerto(), QuantumDashboardServer.RUTA_PARAGUAY);
+        assertEquals(200, index.statusCode());
+        assertEquals(200, nexus.statusCode());
+        assertEquals(200, py.statusCode());
+        assertTrue(index.body().contains("RADAR 3D DEL POLO NORTE"));
+        assertTrue(nexus.body().contains("NEXUS OPS"));
+        assertTrue(py.body().contains("RADAR TÁCTICO DE PARAGUAY"));
+        assertFalse(py.body().contains("RADAR 3D DEL POLO NORTE"));
+        assertFalse(index.body().equals(nexus.body()));
+    }
+
+    @Test
     void testIndexYNexusConvivenEnElMismoPuerto() throws Exception {
         servidor = new QuantumDashboardServer();
         servidor.iniciar();
