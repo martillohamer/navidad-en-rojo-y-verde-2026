@@ -151,6 +151,32 @@
     .badge.offline { color: var(--rojo); border-color: rgba(255, 43, 61, 0.45); }
     .badge.offline .pulso { background: var(--rojo); box-shadow: 0 0 12px var(--rojo); animation-duration: 0.5s; }
 
+    #vrZona { display: flex; align-items: center; }
+    #vrZona > button {
+      position: static !important;
+      width: auto !important;
+      bottom: auto !important;
+      left: auto !important;
+      margin: 0 !important;
+      opacity: 1 !important;
+      font-family: 'Orbitron', sans-serif !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      letter-spacing: 1.5px !important;
+      color: var(--oro) !important;
+      background: rgba(3, 16, 22, 0.6) !important;
+      border: 1px solid rgba(255, 215, 0, 0.45) !important;
+      border-radius: 3px !important;
+      padding: 7px 14px !important;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    #vrZona > button:hover {
+      background: var(--oro) !important;
+      color: #101005 !important;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.55);
+    }
+
     @keyframes latido { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.65); } }
 
     /* ---------- METRICAS ---------- */
@@ -388,6 +414,7 @@
 
   <header class="panel">
     <h1>RADAR 3D DEL POLO NORTE</h1>
+    <div id="vrZona"></div>
     <span class="badge offline" id="badge">
       <span class="pulso"></span>
       <span id="badgeTexto">SISTEMA OFFLINE</span>
@@ -442,6 +469,11 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+    import { VRButton } from 'three/addons/webxr/VRButton.js';
 
     /* ===================== MOTOR DE AUDIO SINTETICO ===================== */
     const MotorAudio = (() => {
@@ -449,6 +481,10 @@
       let maestro = null;
       let padActivo = null;
       let activo = false;
+      let sinfoniaTimer = null;
+      let indiceAcorde = 0;
+      let velocidadSinfonia = 0;
+      let latenciaSinfonia = 120;
 
       function asegurar() {
         if (ctx) return ctx;
@@ -513,6 +549,53 @@
       }
       function error() { enganchar(); nota(220, 0.25, 'sawtooth', 0.10); }
 
+      /* --- Sinfonia cyber-navidena polifonica --- */
+      const PROGRESION = [
+        [261.63, 329.63, 392.00],
+        [220.00, 261.63, 329.63],
+        [174.61, 220.00, 261.63],
+        [196.00, 246.94, 293.66]
+      ];
+
+      function acordePolifonico(freqs, dur, vol, detune) {
+        const c = asegurar();
+        if (!c || !activo) return;
+        const t = c.currentTime;
+        freqs.forEach(f => {
+          ['triangle', 'sine'].forEach((tipo, j) => {
+            const osc = c.createOscillator();
+            const g = c.createGain();
+            osc.type = tipo;
+            osc.frequency.setValueAtTime(f * (j === 0 ? 1 : 2), t);
+            osc.detune.setValueAtTime(detune * (j === 0 ? 1 : -1), t);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol, t + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            osc.connect(g); g.connect(maestro);
+            osc.start(t); osc.stop(t + dur + 0.06);
+          });
+        });
+      }
+
+      function pasoSinfonia() {
+        if (!activo) { sinfoniaTimer = null; return; }
+        const dur = 0.95;
+        const detune = Math.min(latenciaSinfonia, 600) * 0.14;
+        const vol = 0.045 + Math.min(velocidadSinfonia, 260) * 0.00025;
+        acordePolifonico(PROGRESION[indiceAcorde % PROGRESION.length], dur, vol, detune);
+        if (indiceAcorde % 2 === 0) campanillas(0.55);
+        indiceAcorde++;
+        const intervalo = Math.max(360, Math.min(1600, 940 - velocidadSinfonia * 1.9 + latenciaSinfonia * 1.1));
+        sinfoniaTimer = setTimeout(pasoSinfonia, intervalo);
+      }
+
+      function iniciarSinfonia() { if (!sinfoniaTimer) pasoSinfonia(); }
+      function detenerSinfonia() { if (sinfoniaTimer) { clearTimeout(sinfoniaTimer); sinfoniaTimer = null; } }
+      function actualizarSinfonia(velocidad, latencia) {
+        if (Number.isFinite(velocidad)) velocidadSinfonia = velocidad;
+        if (Number.isFinite(latencia)) latenciaSinfonia = latencia;
+      }
+
       function pad() {
         const c = asegurar();
         if (!c || padActivo) return;
@@ -547,18 +630,19 @@
       function alternar() {
         activo = !activo;
         enganchar();
-        if (activo) { pad(); nota(660, 0.12, 'triangle', 0.12); }
-        else { pararPad(); nota(330, 0.12, 'triangle', 0.10); }
+        if (activo) { pad(); iniciarSinfonia(); nota(660, 0.12, 'triangle', 0.12); }
+        else { pararPad(); detenerSinfonia(); nota(330, 0.12, 'triangle', 0.10); }
         return activo;
       }
 
       function estaActivo() { return activo; }
-      return { hover, click, beep, campanillas, error, alternar, estaActivo, enganchar };
+      return { hover, click, beep, campanillas, error, alternar, estaActivo, enganchar, actualizarSinfonia };
     })();
 
     /* ===================== ESCENA 3D ===================== */
     const canvas = document.getElementById('escena');
     const escena = new THREE.Scene();
+    escena.background = new THREE.Color(0x01050a);
     escena.fog = new THREE.FogExp2(0x01050a, 0.0014);
 
     const camara = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 5000);
@@ -569,6 +653,9 @@
     renderizador.setSize(innerWidth, innerHeight);
     renderizador.shadowMap.enabled = true;
     renderizador.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderizador.toneMapping = THREE.ACESFilmicToneMapping;
+    renderizador.toneMappingExposure = 1.1;
+    renderizador.xr.enabled = true;
 
     const controles = new OrbitControls(camara, renderizador.domElement);
     controles.enableDamping = true;
@@ -579,6 +666,50 @@
     controles.maxDistance = 680;
     controles.autoRotate = true;
     controles.autoRotateSpeed = 0.55;
+
+    /* ===================== POST-PROCESSING CINEMATOGRAFICO ===================== */
+    const AberracionShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        intensidad: { value: 0.0 },
+        distorsion: { value: 0.0 },
+        tiempo: { value: 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform sampler2D tDiffuse;
+        uniform float intensidad;
+        uniform float distorsion;
+        uniform float tiempo;
+        void main() {
+          vec2 centro = vUv - 0.5;
+          float r2 = dot(centro, centro);
+          vec2 uv = vUv + centro * (r2 * distorsion);
+          float onda = sin(tiempo * 4.0) * 0.0006 * intensidad;
+          float offset = intensidad * (0.004 + r2 * 0.010) + onda;
+          float r = texture2D(tDiffuse, uv + centro * offset).r;
+          float g = texture2D(tDiffuse, uv).g;
+          float b = texture2D(tDiffuse, uv - centro * offset).b;
+          gl_FragColor = vec4(r, g, b, 1.0);
+        }`
+    };
+
+    const composer = new EffectComposer(renderizador);
+    composer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    composer.setSize(innerWidth, innerHeight);
+    composer.addPass(new RenderPass(escena, camara));
+
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 1.05, 0.55, 0.2);
+    composer.addPass(bloom);
+
+    const aberracion = new ShaderPass(AberracionShader);
+    composer.addPass(aberracion);
 
     /* Luces */
     escena.add(new THREE.AmbientLight(0x88ddff, 0.5));
@@ -813,12 +944,18 @@
       const caja = crearCajaRegalo(lado, CAJA_ESTILOS[i % CAJA_ESTILOS.length]);
       caja.position.set(x, caja.userData.altura / 2 + 1.05, z);
       caja.rotation.y = (pseudoaleatorio() - 0.5) * 0.5;
+      caja.userData.baseY = caja.position.y;
+      caja.userData.vy = 0;
+      caja.userData.fase = i * 0.85;
       regalos.push(caja);
       trineo.add(caja);
     });
     const cajaTope = crearCajaRegalo(1.3, CAJA_ESTILOS[0]);
     cajaTope.position.set(-0.4, cajaTope.userData.altura / 2 + 2.9, -0.6);
     cajaTope.rotation.y = 0.3;
+    cajaTope.userData.baseY = cajaTope.position.y;
+    cajaTope.userData.vy = 0;
+    cajaTope.userData.fase = 5.2;
     regalos.push(cajaTope);
     trineo.add(cajaTope);
 
@@ -829,6 +966,23 @@
     asiento.position.set(-4.0, 1.35, 0);
     asiento.castShadow = true;
     trineo.add(asiento);
+
+    /* Envolver todas las piezas en un chasis para aplicar fisicas de inercia */
+    const chasis = new THREE.Group();
+    while (trineo.children.length > 0) {
+      chasis.add(trineo.children[0]);
+    }
+    trineo.add(chasis);
+
+    const fisica = {
+      inclinacionZ: 0, inclinacionX: 0,
+      objetivoZ: 0, objetivoX: 0,
+      velocidadAnterior: 0
+    };
+    const estadoVuelo = {
+      velocidad: 0, altitud: 1200, latencia: 120,
+      lonAnterior: null, ultimoSello: null, aberracion: 0
+    };
 
     escena.add(trineo);
 
@@ -937,6 +1091,37 @@
         luzNavidad.position.copy(pos);
         luzOro.position.copy(pos).add(new THREE.Vector3(6, -4, 6));
         pintarPunto(pos);
+
+        /* Latencia de red estimada por desvio del intervalo SSE (500 ms nominal) */
+        const ahora = performance.now();
+        if (estadoVuelo.ultimoSello !== null) {
+          const desvio = Math.abs((ahora - estadoVuelo.ultimoSello) - 500);
+          estadoVuelo.latencia = estadoVuelo.latencia * 0.85 + (10 + desvio * 0.6) * 0.15;
+        }
+        estadoVuelo.ultimoSello = ahora;
+
+        /* Fisica: inercia por velocidad, altitud y cambios de rumbo */
+        const velocidad = d.velocidadKmh;
+        const aceleracion = velocidad - fisica.velocidadAnterior;
+        fisica.velocidadAnterior = velocidad;
+        estadoVuelo.velocidad = velocidad;
+        estadoVuelo.altitud = d.altitud;
+        const giro = estadoVuelo.lonAnterior === null ? 0 : d.longitud - estadoVuelo.lonAnterior;
+        estadoVuelo.lonAnterior = d.longitud;
+        fisica.objetivoZ = THREE.MathUtils.clamp(-giro * 0.05 - (velocidad / 260) * 0.18, -0.55, 0.55);
+        fisica.objetivoX = THREE.MathUtils.clamp((d.altitud - 1200) * 0.0004 + aceleracion * 0.006, -0.4, 0.4);
+
+        /* Impulso de suspension proporcional a la turbulencia (cambio de rumbo + velocidad) */
+        const impulso = Math.min(0.9, Math.abs(giro) * 0.08 + Math.abs(aceleracion) * 0.05 + velocidad * 0.0006);
+        for (const r of regalos) {
+          r.userData.vy += impulso * (0.6 + Math.abs(Math.sin(r.userData.fase)) * 0.8);
+        }
+
+        /* Post-processing reactivo a la velocidad orbital */
+        const exceso = Math.max(0, (velocidad - 200) / 120);
+        estadoVuelo.aberracion = Math.min(1, exceso);
+
+        MotorAudio.actualizarSinfonia(velocidad, estadoVuelo.latencia);
         MotorAudio.beep();
         MotorAudio.campanillas(0.8);
       };
@@ -1051,7 +1236,15 @@
       camara.aspect = innerWidth / innerHeight;
       camara.updateProjectionMatrix();
       renderizador.setSize(innerWidth, innerHeight);
+      composer.setSize(innerWidth, innerHeight);
+      bloom.resolution.set(innerWidth, innerHeight);
     });
+
+    /* ===================== WEBXR / REALIDAD VIRTUAL ===================== */
+    const vrBoton = VRButton.createButton(renderizador);
+    vrBoton.id = 'btnVR';
+    const vrZona = document.getElementById('vrZona');
+    if (vrZona) vrZona.appendChild(vrBoton);
 
     let interactuando = false;
     controles.addEventListener('start', () => { interactuando = true; });
@@ -1064,8 +1257,7 @@
     const reloj = new THREE.Clock();
 
     function animar() {
-      requestAnimationFrame(animar);
-      const dt = reloj.getDelta();
+      const dt = Math.min(reloj.getDelta(), 0.05);
       const t = reloj.getElapsedTime();
 
       if (!interactuando && controles.autoRotate) {
@@ -1083,14 +1275,45 @@
 
       matEstrellas.opacity = 0.65 + Math.sin(t * 2.0) * 0.2;
 
+      /* Fisica de inercia del chasis */
+      fisica.inclinacionZ += (fisica.objetivoZ - fisica.inclinacionZ) * Math.min(1, dt * 3.5);
+      fisica.inclinacionX += (fisica.objetivoX - fisica.inclinacionX) * Math.min(1, dt * 3.5);
+      chasis.rotation.z = fisica.inclinacionZ;
+      chasis.rotation.x = fisica.inclinacionX;
+      chasis.position.y = Math.sin(t * 6.5) * 0.12 * (1 + estadoVuelo.velocidad / 200);
+
+      /* Suspension armonica de la carga */
+      const turbulencia = 1 + estadoVuelo.velocidad / 150;
+      for (const r of regalos) {
+        const ud = r.userData;
+        const fuerza = (ud.baseY - r.position.y) * 90;
+        ud.vy += (fuerza - ud.vy * 7) * dt;
+        ud.vy += Math.sin(t * 7 + ud.fase) * 0.6 * dt * turbulencia;
+        r.position.y += ud.vy * dt;
+        r.rotation.z = fisica.inclinacionZ * 0.6 + Math.sin(t * 4 + ud.fase) * 0.02;
+      }
+      casco.position.y = Math.sin(t * 5.2 + 0.4) * 0.09 * turbulencia;
+
+      /* Post-processing reactivo a velocidad */
+      const ab = aberracion.uniforms;
+      ab.intensidad.value += (estadoVuelo.aberracion * 0.05 - ab.intensidad.value) * Math.min(1, dt * 3);
+      ab.distorsion.value += (estadoVuelo.aberracion * 0.22 - ab.distorsion.value) * Math.min(1, dt * 3);
+      ab.tiempo.value = t;
+      bloom.strength = 1.05 + estadoVuelo.aberracion * 0.75 + Math.sin(t * 1.2) * 0.05;
+
       actualizarEstela(dt);
       posicionarTooltip();
       controles.update();
-      renderizador.render(escena, camara);
+
+      if (renderizador.xr.isPresenting) {
+        renderizador.render(escena, camara);
+      } else {
+        composer.render();
+      }
     }
 
     conectar();
-    animar();
+    renderizador.setAnimationLoop(animar);
     setTimeout(() => document.getElementById('carga').classList.add('oculto'), 500);
   </script>
 </body>

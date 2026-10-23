@@ -258,6 +258,7 @@
           <div>VERDE — elfo operativo</div>
           <div>AMBAR — latencia elevada</div>
           <div>ROJO — nodo en caos</div>
+          <div>CIAN — auto-reparacion BFT</div>
         </div>
       </section>
 
@@ -274,6 +275,8 @@
           <div class="metrica-mini"><span>Nodos afectados</span><span id="nodosAfectados">0</span></div>
           <div class="metrica-mini"><span>Entropia red</span><span id="entropia">0.50</span></div>
           <div class="metrica-mini"><span>Latencia media</span><span id="latencia">10 ms</span></div>
+          <div class="metrica-mini"><span>Nodos en curacion</span><span id="nodosCuracion">0</span></div>
+          <div class="metrica-mini"><span>Protocolos BFT</span><span id="protocolosBFT">0</span></div>
           <div class="estado-caos" id="estadoCaos">GRINCH EN REPOSO</div>
           <button class="cyber grinch" id="btnInyectar">Inyectar Caos</button>
           <button class="cyber" id="btnRestaurar">Restaurar Orden</button>
@@ -326,8 +329,54 @@
         y: 0.5 + Math.sin(i / N_NODOS * Math.PI * 2) * (0.24 + rnd() * 0.18),
         base: 0.35 + rnd() * 0.5,
         fase: rnd() * Math.PI * 2,
-        estado: 'ok'
+        estado: 'ok',
+        pulsoCuracion: 0
       });
+    }
+
+    /* ---- Consenso BFT autonomo y auto-reparacion ---- */
+    const temporizadoresBFT = new Set();
+    let protocolosBFT = 0;
+
+    function nodosEnCuracion() {
+      return nodos.filter(n => n.estado === 'curando').length;
+    }
+
+    function actualizarStatsBFT() {
+      const e1 = document.getElementById('nodosCuracion');
+      const e2 = document.getElementById('protocolosBFT');
+      if (e1) e1.textContent = nodosEnCuracion();
+      if (e2) e2.textContent = protocolosBFT;
+    }
+
+    function marcarCritico(nodo, idx) {
+      if (nodo.estado === 'critico' || nodo.estado === 'curando') return;
+      nodo.estado = 'critico';
+      nodo.pulsoCuracion = 0;
+      const retardo = 1400 + Math.random() * 2600;
+      const t1 = setTimeout(() => {
+        temporizadoresBFT.delete(t1);
+        if (!caosActivo) { nodo.estado = 'ok'; actualizarStatsBFT(); return; }
+        nodo.estado = 'curando';
+        nodo.pulsoCuracion = 0;
+        protocolosBFT++;
+        actualizarStatsBFT();
+        registrar('BFT: nodo ' + (idx + 1) + ' critico — re-enrutando via consenso de la IA defensiva', 'aviso');
+        const t2 = setTimeout(() => {
+          temporizadoresBFT.delete(t2);
+          nodo.estado = 'ok';
+          nodo.pulsoCuracion = 0;
+          actualizarStatsBFT();
+          registrar('BFT: nodo ' + (idx + 1) + ' auto-reparado — verde restaurado', 'ok');
+        }, 1000);
+        temporizadoresBFT.add(t2);
+      }, retardo);
+      temporizadoresBFT.add(t1);
+    }
+
+    function cancelarProtocolosBFT() {
+      temporizadoresBFT.forEach(t => clearTimeout(t));
+      temporizadoresBFT.clear();
     }
 
     function dibujar(t) {
@@ -353,17 +402,30 @@
         ctx.stroke();
       }
 
-      nodos.forEach((n, i) => {
-        const pulso = Math.sin(t * 0.002 + n.fase) * 0.15 + 1;
+      nodos.forEach((n) => {
+        let pulso = Math.sin(t * 0.002 + n.fase) * 0.15 + 1;
+        if (n.estado === 'critico') pulso *= 1 + Math.abs(Math.sin(t * 0.012)) * 0.5;
         const r = (4 + n.base * 4) * pulso;
         let color = '#2fe08a';
-        if (caosActivo && i % 3 === 0) color = '#ff2b3d';
-        else if (n.estado === 'aviso') color = '#ffb340';
+        if (n.estado === 'aviso') color = '#ffb340';
+        else if (n.estado === 'critico') color = '#ff2b3d';
+        else if (n.estado === 'curando') color = '#00ffcc';
+
+        if (n.estado === 'curando') {
+          n.pulsoCuracion = ((n.pulsoCuracion || 0) + 0.02) % 1;
+          const radioAnillo = r + n.pulsoCuracion * 24;
+          ctx.beginPath();
+          ctx.arc(n.x * w, n.y * h, radioAnillo, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(0, 255, 204, ' + (1 - n.pulsoCuracion) + ')';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
         ctx.beginPath();
         ctx.arc(n.x * w, n.y * h, r, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.shadowColor = color;
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = n.estado === 'curando' ? 24 : 14;
         ctx.fill();
         ctx.shadowBlur = 0;
       });
@@ -386,16 +448,14 @@
       };
       fuente.onmessage = (evento) => {
         const d = JSON.parse(evento.data);
-        if (caosActivo) {
-          nodos.forEach((n, i) => { n.estado = (i % 3 === 0) ? 'aviso' : 'ok'; });
-        }
         if (d.secuencia % 5 === 0) {
           registrar('Muestra #' + d.secuencia + ' · lat ' + d.latitud.toFixed(1)
             + ' · lon ' + d.longitud.toFixed(1) + ' · v ' + d.velocidadKmh.toFixed(0) + ' km/h',
             caosActivo ? 'caos' : '');
         }
         document.getElementById('latencia').textContent = (6 + (d.secuencia % 9)) + ' ms';
-        document.getElementById('entropia').textContent = (caosActivo ? 0.9 : 0.5).toFixed(2);
+        const curacion = nodosEnCuracion();
+        document.getElementById('entropia').textContent = (caosActivo ? Math.max(0.3, 0.95 - curacion * 0.08) : 0.5).toFixed(2);
       };
       fuente.onerror = () => {
         badge.classList.add('offline');
@@ -418,16 +478,22 @@
       estadoCaos.textContent = 'CAOS ACTIVO — ' + intensidad + '%';
       estadoCaos.classList.add('activo');
       registrar('GRINCH inyecta caos al ' + intensidad + '% — ' + afectados + ' nodos corrompidos', 'caos');
+      for (let i = 0; i < afectados; i++) {
+        marcarCritico(nodos[i], i);
+      }
+      actualizarStatsBFT();
     });
 
     document.getElementById('btnRestaurar').addEventListener('click', () => {
       caosActivo = false;
-      nodos.forEach(n => { n.estado = 'ok'; });
+      cancelarProtocolosBFT();
+      nodos.forEach(n => { n.estado = 'ok'; n.pulsoCuracion = 0; });
       document.getElementById('nodosAfectados').textContent = '0';
       document.getElementById('entropia').textContent = '0.50';
       estadoCaos.textContent = 'GRINCH EN REPOSO';
       estadoCaos.classList.remove('activo');
-      registrar('Consenso restaurado — el Grinch vuelve al reposo', 'ok');
+      actualizarStatsBFT();
+      registrar('Consenso BFT restaurado — el Grinch vuelve al reposo', 'ok');
     });
 
     conectar();
