@@ -90,6 +90,37 @@ class QuantumDashboardServerTest {
     }
 
     @Test
+    void testParaguaySirveElGeojsonYLasLibreriasLocales() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> geojson = pedir(servidor.puerto(),
+                QuantumDashboardServer.RUTA_DATOS + "/paraguay-departamentos.geojson");
+        HttpResponse<String> three = pedir(servidor.puerto(),
+                QuantumDashboardServer.RUTA_VENDOR + "/three.module.js");
+        HttpResponse<String> d3 = pedir(servidor.puerto(),
+                QuantumDashboardServer.RUTA_VENDOR + "/d3-geo.esm.js");
+        assertEquals(200, geojson.statusCode());
+        assertTrue(geojson.headers().firstValue("Content-Type").orElse("").startsWith("application/geo+json"));
+        assertTrue(geojson.body().contains("\"FeatureCollection\""));
+        assertTrue(geojson.body().contains("Asunción"));
+        assertEquals(200, three.statusCode());
+        assertTrue(three.headers().firstValue("Content-Type").orElse("").startsWith("text/javascript"));
+        assertTrue(three.body().contains("THREE"));
+        assertEquals(200, d3.statusCode());
+        assertTrue(d3.headers().firstValue("Content-Type").orElse("").startsWith("text/javascript"));
+        assertTrue(d3.body().contains("geoMercator"));
+    }
+
+    @Test
+    void testEstaticosRechazanRutasConRetroceso() throws Exception {
+        servidor = new QuantumDashboardServer();
+        servidor.iniciar();
+        HttpResponse<String> r = pedir(servidor.puerto(),
+                QuantumDashboardServer.RUTA_VENDOR + "/../paraguay.html");
+        assertEquals(404, r.statusCode());
+    }
+
+    @Test
     void testRutasConvivenIndexNexusParaguay() throws Exception {
         servidor = new QuantumDashboardServer();
         servidor.iniciar();

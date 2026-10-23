@@ -27,12 +27,15 @@ public class QuantumDashboardServer {
     public static final String RUTA_HEALTH = "/health";
     public static final String RUTA_TELEMETRIA = "/api/telemetria";
     public static final String RUTA_STREAM = "/api/vuelo/stream";
+    public static final String RUTA_VENDOR = "/vendor";
+    public static final String RUTA_DATOS = "/data";
     public static final String RECURSO_INDEX = "static/index.html";
     public static final String RECURSO_NEXUS = "static/nexus.html";
     public static final String RECURSO_PARAGUAY = "static/paraguay.html";
     public static final String RUTA_FICHERO_INDEX = "src/main/resources/static/index.html";
     public static final String RUTA_FICHERO_NEXUS = "src/main/resources/static/nexus.html";
     public static final String FICHERO_PARAGUAY = "src/main/resources/static/paraguay.html";
+    public static final String RUTA_FICHERO_ESTATICOS = "src/main/resources/static";
 
     public record Telemetria(long secuencia, double latitud, double longitud,
             double altitud, double velocidadKmh) {
@@ -77,6 +80,8 @@ public class QuantumDashboardServer {
         this.servidor.createContext(RUTA_HEALTH, this::gestionarHealth);
         this.servidor.createContext(RUTA_TELEMETRIA, this::gestionarTelemetria);
         this.servidor.createContext(RUTA_STREAM, this::gestionarStream);
+        this.servidor.createContext(RUTA_VENDOR, this::gestionarEstatico);
+        this.servidor.createContext(RUTA_DATOS, this::gestionarEstatico);
     }
 
     public synchronized void iniciar() {
@@ -169,12 +174,54 @@ public class QuantumDashboardServer {
     }
 
     private void servirHtml(HttpExchange intercambio, String rutaFichero, String recurso) throws IOException {
-        byte[] html = leerHtml(rutaFichero, recurso);
+        byte[] html = leerRecurso(rutaFichero, recurso);
         intercambio.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
         intercambio.sendResponseHeaders(200, html.length);
         try (OutputStream os = intercambio.getResponseBody()) {
             os.write(html);
         }
+    }
+
+    private void gestionarEstatico(HttpExchange intercambio) throws IOException {
+        String ruta = intercambio.getRequestURI().getPath();
+        if (ruta.contains("..")) {
+            intercambio.sendResponseHeaders(404, -1);
+            intercambio.close();
+            return;
+        }
+        String recurso = "static" + ruta;
+        try {
+            byte[] datos = leerRecurso(RUTA_FICHERO_ESTATICOS + ruta, recurso);
+            intercambio.getResponseHeaders().add("Content-Type", tipoContenido(ruta));
+            intercambio.getResponseHeaders().add("Cache-Control", "public, max-age=3600");
+            intercambio.sendResponseHeaders(200, datos.length);
+            try (OutputStream os = intercambio.getResponseBody()) {
+                os.write(datos);
+            }
+        } catch (IOException e) {
+            intercambio.sendResponseHeaders(404, -1);
+            intercambio.close();
+        }
+    }
+
+    private static String tipoContenido(String ruta) {
+        String limpia = ruta.toLowerCase(java.util.Locale.ROOT);
+        if (limpia.endsWith(".js") || limpia.endsWith(".mjs")) {
+            return "text/javascript; charset=UTF-8";
+        }
+        if (limpia.endsWith(".geojson") || limpia.endsWith(".json")) {
+            return "application/geo+json; charset=UTF-8";
+        }
+        if (limpia.endsWith(".css")) {
+            return "text/css; charset=UTF-8";
+        }
+        if (limpia.endsWith(".png")) {
+            return "image/png";
+        }
+        if (limpia.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        return "application/octet-stream";
     }
 
     private void gestionarHealth(HttpExchange intercambio) throws IOException {
@@ -203,7 +250,7 @@ public class QuantumDashboardServer {
         }
     }
 
-    private byte[] leerHtml(String rutaFichero, String recurso) throws IOException {
+    private byte[] leerRecurso(String rutaFichero, String recurso) throws IOException {
         String clave = rutaFichero + "|" + recurso;
         byte[] cache = cacheHtml.get(clave);
         if (cache != null) {
