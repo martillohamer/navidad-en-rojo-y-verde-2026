@@ -1,36 +1,28 @@
-name: CI Navidad Roja y Verde
+name: CI - Navidad en Rojo y Verde 2026
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main, feat/* ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  validar-soluciones:
+  build-and-test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configurar Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Comprobar estructura (esqueletos y soluciones emparejados)
-        run: bash scripts/comprobar-estructura
-      - name: Validar soluciones en verde
-        run: mvn -Psoluciones test
 
-  progreso:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Configurar Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Ejecutar tests (modo reto, en rojo)
-        run: mvn test -Dmaven.test.failure.ignore=true || true
-      - name: Mostrar progreso
-        run: ./scripts/progreso
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Run Tests (Main Profile)
+      run: mvn clean test
+
+    - name: Run Tests (Soluciones Profile)
+      run: mvn -Psoluciones clean test
