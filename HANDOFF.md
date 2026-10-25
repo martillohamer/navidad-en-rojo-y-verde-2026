@@ -1,105 +1,96 @@
-# 🤖 HANDOFF – Navidad en Rojo y Verde 2026
+# HANDOFF Técnico — Navidad en Rojo y Verde 2026
 
-Guía técnica para quien retome el proyecto (personas o IAs). Lee esto antes de tocar nada.
+Este documento constituye el **manual de transferencia técnica definitivo (Handoff)** para el sistema **Navidad en Rojo y Verde 2026**. Está diseñado para proporcionar contexto total y autónomo a cualquier desarrollador humano o agente de Inteligencia Artificial (LLM) que deba comprender, ejecutar, mantener o extender la base de código.
 
-## Qué es
-Adviento de retos de lógica en Java para principiantes, en castellano. Cada día = un test en rojo que el alumno pone en verde. Repositorio: `github.com/martillohamer/navidad-en-rojo-y-verde-2026`.
+---
 
-## Estado actual
-- **Proyecto completo de extremo a extremo** 🎉: el **ciclo de adviento de 24 retos** está terminado y, sobre él, se ha construido una **Extensión de Alta Fiabilidad y Sistemas Distribuidos**. Suite completa: **224 tests en verde absoluto** (`BUILD SUCCESS` en modo reto y soluciones).
-- Todos los días implementados en `src/main/java`, con test y solución de referencia byte-idéntica en `src/solutions/java`.
-- **43 ficheros emparejados** verificados por `scripts/comprobar-estructura` con simetría binaria perfecta (`cmp` sin diferencias).
-- Enunciados: los 24 días tienen enunciado completo (historia, preguntas de razonamiento, pseudocódigo, pista plegable, ruta del fichero, comando de test y reto extra).
+## 1. Visión General y Propósito del Proyecto
 
-## Extensión de Alta Fiabilidad y Sistemas Distribuidos
-Subsistemas avanzados bajo `reto/extension/` (y `reto/cli/`), todos con test JUnit 5 y copia simétrica en soluciones:
+- **Nombre del Proyecto**: *Navidad en Rojo y Verde 2026* (`navidad-en-rojo-y-verde-2026`).
+- **Propósito**: Plataforma táctica multirregión 3D en tiempo real para el seguimiento de la operación logística navideña, integrando cartografía digital vectorial de alta precisión, proyecciones geográficas complejas, simulación de vehículos aéreos (trineo), telemetría por streaming y un ecosistema de alta fiabilidad en Java.
+- **Stack Tecnológico**:
+  - **Backend**: Java 21, Spring Boot y servidor HTTP nativo concurrente (`QuantumDashboardServer.java`).
+  - **Frontend / 3D**: Three.js (módulos offline con `importmap`), D3-Geo (`d3-geo.esm.js`), Polylabel (`polylabel.esm.js`), CSS2DRenderer, HTML5 y CSS3 avanzado.
+  - **Transporte / Telemetría**: Server-Sent Events (SSE) y WebSockets (RFC 6455).
+  - **Build & Dependency Management**: Apache Maven 3.9+ (con soporte para perfiles duales `main` y `soluciones`).
+  - **QA & Testing**: JUnit 5, Mockito, Playwright (capturas E2E).
+  - **CI/CD**: GitHub Actions en entorno Ubuntu con JDK 21 (Temurin).
 
-```text
-reto/extension/caos/       GrinchChaosEngine     Caos determinista (Random con semilla), latencia, desconexion P2P, corrupcion y consenso BFT
-reto/extension/agente/     ElfoAgentMemoryStore  Memoria vectorial con similitud de coseno y record CartaMemoria
-reto/extension/ledger/     MerkleLedger          Raiz de Merkle con SHA-256 (MessageDigest)
-reto/extension/oraculo/    OllamaOraculoClient   Cliente HttpClient nativo contra Ollama (llama3) con payload/parseo JSON propios
-reto/extension/ia/         ElfReinforcementEngine Q-learning en memoria con politica epsilon-greedy
-reto/extension/wasm/       WasmBridge            Logica pura JDK-neutral, hash FNV-1a y contrato de serializacion
-reto/extension/k8s/        ElfoOperator          Operador estilo Kubernetes: CRD, Reconciler<T> y auto-reparacion de pods
-reto/extension/dsl/        NavidadCompiler       DSL con expresiones regulares y record InstruccionRegalo
-reto/extension/radar/      SseTelemetriaController  SSE con HttpServer + ScheduledExecutorService y cliente Three.js
-reto/extension/dashboard/  QuantumDashboardServer  Servidor HTTP nativo con telemetria interactiva
-reto/cli/                  NorthPoleCommandCenter  Centro de mando CLI con banner ANSI y veredicto del despegue
-```
+---
 
-## Patrones técnicos clave
-- **Inyección determinista de caos:** el `Random` se inyecta por constructor (`new Random(semilla)`), de modo que la aleatoriedad de `GrinchChaosEngine` y `ElfReinforcementEngine` es reproducible en tests. Nunca se usa aleatoriedad global.
-- **Tipos inmutables:** todo modelo es un `record` (`PoliticaCaos`, `ResultadoCaos`, `Estado`, `Accion`, `CartaMemoria`, `Transaccion`, `PodElfo`, `ElfoSpec`, `ElfoRecurso`, `WasmEvento`). Las listas se copian defensivamente con `List.copyOf` y se validan en el constructor compacto.
-- **Simetría de compilación estricta:** cada clase de `src/main/java` tiene gemela byte-idéntica en `src/solutions/java`. El `pom.xml` conmuta el `sourceDirectory` vía la propiedad `clases.dir` (perfil `soluciones`).
-- **Control de convergencia en el Operador K8s:** el bucle `reconciliar` lleva el estado observado hacia la spec deseada; los pods creados entran directamente en `Running` (el operador simula el scheduling), lo que garantiza que `estaConvergido` termine siendo verdadero. Un test detectó que un estado `Pending` inicial rompía la convergencia.
-- **Servidores HTTP nativos:** `com.sun.net.httpserver` con hilos daemon y apagado limpio (`stop(0)`), sin frameworks externos.
+## 2. Arquitectura y Estructura del Código
 
-## Stack
-Java 21, Maven, JUnit 5 (5.10.2), GitHub Actions. Sin dependencias externas: la extensión usa solo el JDK estándar.
+### A. Simetría Binaria Estricta (50/50)
+El repositorio mantiene un diseño dual mediante perfiles de Maven:
+- **`src/main/java`**: Contiene el código de producción, esqueletos y clases de apoyo.
+- **`src/solutions/java`**: Contiene las soluciones completas e implementaciones de referencia.
+- **Invariante**: Todo fichero Java en `src/main/java` **debe** tener su gemelo byte-a-byte idéntico en `src/solutions/java`. La conformidad estructural se valida de forma automatizada mediante el script `scripts/comprobar-estructura`.
 
-## Estructura (y por qué)
-```text
-src/main/java/reto/diaNN/       implementaciones resueltas + clases de apoyo (un día nuevo empieza lanzando UnsupportedOperationException)
-src/main/java/reto/extension/    subsistemas avanzados (caos, agente, ledger, oraculo, ia, wasm, k8s, dsl, radar, dashboard)
-src/main/java/reto/cli/          centro de mando CLI
-src/test/java/reto/              tests JUnit de cada día y de cada subsistema
-src/solutions/java/reto/         soluciones: MISMO nombre y paquete que la implementación + copia idéntica byte a byte
-enunciados/diaNN-nombre/        enunciado.md de cada día
-plantilla-reto/                 plantilla de enunciado, esqueleto y test
-scripts/                        progreso, progreso.bat, comprobar-estructura
-deploy.ps1                      despliegue automatizado (clean + test + soluciones + progreso)
-docs/CI_WORKFLOW.md             contrato de integración continua y ciclo de PR
-```
-Decisión: se usa la estructura estándar de Maven para que VS Code, IntelliJ y Maven la entiendan sin plugins. Una carpeta de tests con nombres como `dia01-el-despertar` y paquete `reto.dia01` hacía que el editor marcara errores (el paquete debe coincidir con la carpeta).
+### B. Subsistemas Cartográficos Activos
+1. **Paraguay 3D (`/paraguay`)**:
+   - Cartografía oficial extraída de `geoBoundaries` (`PRY ADM1`, 18 entidades administrativas).
+   - Simplificada al 5% con `mapshaper` (<300 KB), con reorientación de anillos en convención d3-geo (exterior en sentido horario, agujeros antihorarios).
+   - Hidrografía principal (ríos Paraguay, Paraná y Pilcomayo) recortada desde Natural Earth 10m.
+2. **España 3D (`/espana`)**:
+   - 52 entidades provinciales (50 provincias + Ceuta y Melilla) basadas en Natural Earth Admin-1 (CC BY 4.0).
+   - Proyección dual avanzada: Península, Baleares y Norte de África centradas en la vista principal, complementadas con un **recuadro (inset) interactivo para las Islas Canarias** en la esquina inferior izquierda.
+3. **Módulo Frontend Compartido (`src/main/resources/static/js/mapa-geo.js`)**:
+   - Núcleo cartográfico reutilizable que centraliza la carga de ficheros GeoJSON, proyecciones geográficas, extrusión poligonal 3D (`ExtrudeGeometry`), etiquetas dinámicas con `polylabel`, animación de la ruta del trineo (`CatmullRomCurve3`), estela de partículas y actualización reactiva del panel HUD.
 
-## Cómo cambia entre rojo y verde
-El `pom.xml` usa la propiedad `clases.dir` como `sourceDirectory`:
-- Por defecto vale `src/main/java` (implementaciones del reto).
-- El perfil `soluciones` la cambia a `src/solutions/java` (verde canónico).
-Los tests son los mismos en los dos modos. En el estado actual ambos árboles están resueltos y en verde; un día nuevo se incorpora en rojo (esqueleto con `UnsupportedOperationException`) y se pone en verde al implementarlo.
+### C. Servidor Backend (`QuantumDashboardServer.java`)
+- Servidor HTTP embebido en Java puro basado en `com.sun.net.httpserver.HttpServer`.
+- **Rutas dedicadas**: `/`, `/nexus`, `/paraguay`, `/espana`, `/health`, `/api/telemetria`, `/api/vuelo/stream`, `/vendor/*`, `/data/*`.
+- **Blindaje de Caché**: Memoria estructurada mediante `ConcurrentHashMap` con clave compuesta estricta `rutaFichero + "|" + recurso`, evitando colisiones absolutas entre activos estáticos de distintas regiones.
+- **Control de Seguridad**: Rechazo explícito de rutas con secuencias de retroceso (`..`).
 
-## Comandos
-| Qué | Comando |
-|---|---|
-| Ejecutar la suite del modo reto | `mvn test` |
-| Un solo día | `mvn test -Dtest=Dia04Test` |
-| Validar las soluciones (debe ir todo en verde) | `mvn -Psoluciones test` |
-| Comprobar que implementaciones y soluciones están emparejadas | `bash scripts/comprobar-estructura` |
-| Ver el árbol de progreso | `./scripts/progreso` |
-| Despliegue completo + verificación | `pwsh -File ./deploy.ps1` |
+---
 
-## Reglas de trabajo
-- Nunca push directo a `main`: rama + Pull Request.
-- Commits y comunicación en castellano.
-- TDD: primero el test.
-- No fusionar con el CI en rojo.
-- No dar nada por terminado sin enseñar la salida real de `mvn` y de `git status`.
+## 3. Garantía de Calidad (QA) y Cobertura
 
-## Checklist para añadir un día nuevo (NN)
-1. Esqueleto en `src/main/java/reto/diaNN/Clase.java` (lanza `UnsupportedOperationException`).
-2. Si hacen falta clases de apoyo (excepciones, modelos, interfaces): en `src/main/java/reto/diaNN/` y una copia **idéntica** en `src/solutions/java/reto/diaNN/`.
-3. Test en `src/test/java/reto/diaNN/DiaNNTest.java`.
-4. Solución en `src/solutions/java/reto/diaNN/Clase.java` (mismo nombre y paquete que el esqueleto).
-5. Enunciado en `enunciados/diaNN-nombre/enunciado.md`: historia, piensa antes de programar, pseudocódigo, pista, dónde programar, cómo comprobarlo y reto extra.
-6. Comprobar: `mvn test` (el día en rojo), `mvn -Psoluciones test` (todo verde) y `bash scripts/comprobar-estructura`.
-7. Añadir la fila al calendario del `README.md`.
-8. Abrir el Pull Request.
+- **Suite de Pruebas**: **276 tests unitarios e de integración** pasando al 100% (`BUILD SUCCESS`).
+- **Pruebas Clave**:
+  - `MapaParaguayTest`: Valida geometrías, 18 entidades, bounding boxes, contención de capitales y consistencia de proyección.
+  - `MapaEspanaTest`: Valida el endpoint HTTP 200 de `/espana`, tipos MIME y la integridad del GeoJSON de 52 provincias.
+  - `QuantumDashboardServerTest`: Verifica las rutas HTTP, estáticos, tipos de contenido y bloqueo de traversals.
+- **Evidencias Visuales E2E**: Capturas de pantalla automatizadas tomadas con Playwright en `docs/paraguay-radar.png` y `docs/espana-radar.png`.
 
-## Trampas conocidas
-- **PowerShell 5.1 y los emojis:** al escribir ficheros con emojis o tildes puede salir `??`. Escribir con `[System.IO.File]::WriteAllText(ruta, texto, (New-Object System.Text.UTF8Encoding($false)))` y comprobar el resultado.
-- **Clases de apoyo duplicadas:** viven en `src/main/java` y en `src/solutions/java`. Si cambias una, cambia las dos. `scripts/comprobar-estructura` (y el CI) lo vigilan.
-- **VS Code:** tras cambiar la estructura, ejecutar `Java: Clean Java Language Server Workspace` y recargar.
-- **Verificar siempre:** ya hubo un resumen que anunciaba los días 17 a 24 sin que existieran. Comprobar con `git ls-files`.
+---
 
-## CI
-- `validar-soluciones`: comprueba la estructura y ejecuta `mvn -Psoluciones test`. Debe ir en verde.
-- `progreso`: ejecuta `mvn test` ignorando fallos y muestra el progreso. Los rojos son esperados.
+## 4. Integración Continua (CI/CD)
 
-## Pautas para futuras ampliaciones y mantenimiento
-- **Añadir un reto del calendario:** sigue el checklist anterior (esqueleto → test → enunciado → solución → README → PR).
-- **Añadir un subsistema de la extensión:** crea el paquete `reto/extension/<modulo>/`, escribe **primero** el test (TDD), implementa con tipos inmutables, replica byte-idéntico en `src/solutions/java`, y verifica con `cmp` + `scripts/comprobar-estructura`.
-- **Nuevas dependencias:** evitarlas. La extensión usa solo el JDK estándar (`HttpClient`, `HttpServer`, `MessageDigest`, `ScheduledExecutorService`, `Random`). Si algo exige una librería externa, documéntalo en `pom.xml` y en este fichero.
-- **Determinismo ante todo:** cualquier componente con azar debe aceptar una fuente inyectable para poder testearse con semilla fija.
-- **Antes de dar algo por cerrado:** ejecuta `pwsh -File ./deploy.ps1` (o los dos `mvn` equivalentes) y `bash scripts/comprobar-estructura`; enseña la salida real, no la prometas.
-- **Estándares de fichero:** UTF-8 sin BOM y saltos de línea LF. Tras escribir con herramientas que inserten CRLF, normaliza con `[System.IO.File]::WriteAllText(ruta, texto, (New-Object System.Text.UTF8Encoding($false)))`.
+- Configurado mediante GitHub Actions en `.github/workflows/ci.yml`.
+- Se dispara automáticamente en cada `push` (`main`, `feat/*`) y `pull_request` (`main`).
+- Pasos del pipeline:
+  1. Descarga del repositorio (`actions/checkout@v4`).
+  2. Configuración de Temurin JDK 21 (`actions/setup-java@v4`) con caché Maven activada.
+  3. Ejecución de la compilación y testeo del perfil predeterminado (`mvn clean test`).
+  4. Ejecución de la compilación y testeo del perfil de soluciones (`mvn -Psoluciones clean test`).
+
+---
+
+## 5. Guía de Inicio Rápido para Desarrolladores y Agentes IA
+
+### Comandos Esenciales (PowerShell 7+ / Bash):
+- **Ejecutar tests en perfil `main`**:
+  ```powershell
+  mvn clean test
+  ```
+- **Ejecutar tests en perfil `solutions`**:
+  ```powershell
+  mvn -Psoluciones clean test
+  ```
+- **Empaquetado completo de producción (JAR)**:
+  ```powershell
+  mvn clean package
+  ```
+- **Comprobar simetría estructural 50/50**:
+  ```bash
+  bash scripts/comprobar-estructura
+  ```
+
+### Protocolo para Extender el Sistema (Añadir una Nueva Región):
+1. **Datos**: Añadir el GeoJSON optimizado (<600 KB) en `src/main/resources/static/data/`.
+2. **Vista**: Crear la plantilla HTML (ej. `src/main/resources/static/italia.html`) importando y configurando `mapa-geo.js`.
+3. **Backend**: Registrar la ruta (`/italia`), su recurso estático y su handler en `QuantumDashboardServer.java` (**replicando el cambio de forma idéntica en `src/main/java` y `src/solutions/java`**).
+4. **Testing**: Añadir una clase de prueba unitaria en `src/test/java/reto/extension/dashboard/` (ej. `MapaItaliaTest.java`) verificando el endpoint y la estructura de datos.
+5. **Verificación**: Comprobar la simetría (`scripts/comprobar-estructura`) y ejecutar `mvn clean test`.
