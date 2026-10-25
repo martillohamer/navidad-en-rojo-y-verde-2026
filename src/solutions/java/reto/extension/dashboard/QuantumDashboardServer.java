@@ -38,14 +38,21 @@ public class QuantumDashboardServer {
     public static final String RUTA_FICHERO_ESTATICOS = "src/main/resources/static";
 
     public record Telemetria(long secuencia, double latitud, double longitud,
-            double altitud, double velocidadKmh) {
+            double altitud, double velocidadKmh, int regalosEntregados, String sector) {
+
+        public Telemetria(long secuencia, double latitud, double longitud,
+                double altitud, double velocidadKmh) {
+            this(secuencia, latitud, longitud, altitud, velocidadKmh, 0, "SECTOR TÁCTICO");
+        }
 
         public String comoEventoSse() {
             return "data: {\"secuencia\":" + secuencia
                     + ",\"latitud\":" + latitud
                     + ",\"longitud\":" + longitud
                     + ",\"altitud\":" + altitud
-                    + ",\"velocidadKmh\":" + velocidadKmh + "}\n\n";
+                    + ",\"velocidadKmh\":" + velocidadKmh
+                    + ",\"regalosEntregados\":" + regalosEntregados
+                    + ",\"sector\":\"" + sector + "\"}\n\n";
         }
     }
 
@@ -141,7 +148,9 @@ public class QuantumDashboardServer {
         double longitud = (s * 3.0) % 360.0 - 180.0;
         double altitud = 1000.0 + Math.cos(s * 0.2) * 200.0;
         double velocidad = 80.0 + (s % 20) * 10.0;
-        return new Telemetria(s, latitud, longitud, altitud, velocidad);
+        int regalos = (int) (s % 52);
+        String sector = (s % 2 == 0) ? "PENÍNSULA" : "ARCHIPIÉLAGO";
+        return new Telemetria(s, latitud, longitud, altitud, velocidad, regalos, sector);
     }
 
     public void difundir() {

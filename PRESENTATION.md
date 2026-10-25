@@ -41,10 +41,10 @@ Autoría: **Equipo Navidad en Rojo y Verde**
 La plataforma evolucionó de un calendario de 24 retos de lógica a un **ecosistema distribuido completo**, sin salir nunca del ciclo **TDD**.
 
 - 🟢 **100 % TDD**: cada componente nació como un test en rojo.
-- ✅ **256 tests en verde absoluto** (`BUILD SUCCESS` en modo reto y soluciones).
+- ✅ **276 tests en verde absoluto** (`BUILD SUCCESS` en modo reto y soluciones).
 - 🔁 **50 ficheros emparejados** con simetría binaria `src/main` ↔ `src/solutions`.
 - 🧱 **Cero dependencias externas**: solo Java 21, Maven y JUnit 5.
-- 🧩 **13 subsistemas** en `reto.extension.*` (`+147 tests` sobre el calendario base).
+- 🧩 **Subsistemas avanzados** (`+197 tests` sobre el calendario base) incluyendo mapas 3D interactivos de Paraguay y España con WebSockets y SSE.
 
 > Un único `pom.xml` conmuta entre implementación y solución vía la propiedad `clases.dir`.
 
@@ -82,7 +82,14 @@ public record TelemetryMessage(String id, String metricName, double value, Insta
 
 ---
 
-## ⌨️ Herramienta CLI
+## 🗺️ Radares Tácticos 3D: Paraguay y España
+
+**Módulos de visualización cartográfica holográfica en tiempo real (`/paraguay` y `/espana`)**:
+
+- **Núcleo Compartido (`static/js/mapa-geo.js`)**: módulo modular parametrizado que unifica la extrusión 3D, proyecciones d3-geo, etiquetas polylabel, trineo procedural y HUDs de telemetría.
+- **España 3D (`/espana`)**: 52 entidades provinciales (50 provincias + Ceuta y Melilla) con proyección dual para la Península y recuadro inferior izquierdo dedicado a las Islas Canarias.
+- **Telemetría en Vivo**: streaming por SSE y WebSockets RFC 6455 con tramas estandarizadas de posición, velocidad, altitud y regalos entregados.
+- **Pruebas y Evidencias**: validado mediante `MapaParaguayTest` y `MapaEspanaTest` (276 tests en verde, capturas en `docs/`).
 
 **`reto.extension.cli.ConsolaNexus`** es una consola interactiva que orquesta los motores del ecosistema.
 
