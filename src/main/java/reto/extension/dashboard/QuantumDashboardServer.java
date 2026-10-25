@@ -209,6 +209,9 @@ public class QuantumDashboardServer {
         if (limpia.endsWith(".js") || limpia.endsWith(".mjs")) {
             return "text/javascript; charset=UTF-8";
         }
+        if (limpia.endsWith(".js") || limpia.endsWith(".mjs")) {
+            return "text/javascript; charset=UTF-8";
+        }
         if (limpia.endsWith(".geojson") || limpia.endsWith(".json")) {
             return "application/geo+json; charset=UTF-8";
         }

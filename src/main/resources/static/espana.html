@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RADAR TÁCTICO DE ESPAÑA — 52 Entidades</title>
+  <style>
+    :root {
+      --cian: #00ffcc;
+      --cian-soft: rgba(0, 255, 204, 0.5);
+      --rojo: #ff2b3d;
+      --carmesi: #ff1e42;
+      --oro: #ffd700;
+      --verde: #2fe08a;
+      --fondo: #02080a;
+      --glass: rgba(4, 22, 24, 0.55);
+      --borde: rgba(0, 255, 204, 0.3);
+      --texto: #cdeee8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 40%, #062024 0%, #02080a 70%);
+      color: var(--texto);
+      font-family: ui-monospace, 'Cascadia Code', 'Fira Code', Consolas, monospace;
+      user-select: none;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg,
+        rgba(0, 255, 204, 0.04) 0px, rgba(0, 255, 204, 0.04) 1px,
+        transparent 1px, transparent 4px);
+    }
+
+    #escena { position: fixed; inset: 0; z-index: 1; }
+
+    #etiquetas3d {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .etiqueta-depto {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #c8fff4;
+      text-shadow: 0 0 8px rgba(0, 255, 204, 0.9), 0 0 18px rgba(0, 255, 204, 0.45);
+      padding: 2px 5px;
+      border-left: 2px solid rgba(0, 255, 204, 0.55);
+      background: rgba(2, 12, 14, 0.45);
+      white-space: nowrap;
+    }
+
+    .etiqueta-depto.pequena {
+      font-size: 9px;
+      color: #ffe98a;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+      border-left-color: rgba(255, 215, 0, 0.8);
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      background: var(--glass);
+      border: 1px solid var(--borde);
+      border-radius: 4px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 0 26px rgba(0, 255, 204, 0.14), inset 0 0 20px rgba(0, 255, 204, 0.05);
+    }
+
+    header.panel {
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1120px, calc(100% - 32px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 20px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 800;
+      font-size: clamp(14px, 1.8vw, 20px);
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, var(--cian), var(--oro) 60%, var(--rojo));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      white-space: nowrap;
+    }
+
+    .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .nav a, .btn-vista {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-decoration: none;
+      color: var(--cian);
+      border: 1px solid var(--borde);
+      border-radius: 3px;
+      padding: 7px 12px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+      background: transparent;
+      cursor: pointer;
+    }
+    .nav a:hover, .btn-vista:hover { background: var(--cian); color: #04120f; box-shadow: 0 0 18px rgba(0, 255, 204, 0.5); }
+    .nav a.activo { background: var(--oro); color: #101005; border-color: var(--oro); box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
+    .btn-vista { color: var(--oro); border-color: rgba(255, 215, 0, 0.45); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--cian);
+      border: 1px solid var(--borde);
+      border-radius: 999px;
+      padding: 6px 14px;
+      white-space: nowrap;
+    }
+    .badge .pulso {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--cian);
+      box-shadow: 0 0 10px var(--cian);
+      animation: latido 1.3s ease-in-out infinite;
+    }
+    .badge.offline { color: var(--rojo); border-color: rgba(255, 43, 61, 0.45); }
+    .badge.offline .pulso { background: var(--rojo); animation-duration: 0.5s; }
+    @keyframes latido { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    #telemetria {
+      top: 100px;
+      left: 18px;
+      width: 262px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    #telemetria h2, #consolaPanel h2 {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--oro);
+      margin-bottom: 3px;
+    }
+
+    .fila {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      padding: 7px 10px;
+      border: 1px solid rgba(0, 255, 204, 0.14);
+      border-radius: 3px;
+      background: rgba(0, 255, 204, 0.05);
+    }
+    .fila .clave { font-size: 9px; letter-spacing: 1.2px; opacity: 0.6; text-transform: uppercase; }
+    .fila .valor { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; font-weight: 600; color: var(--cian); text-align: right; }
+
+    .destacado {
+      padding: 10px;
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 3px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--oro);
+      text-align: center;
+      background: rgba(255, 215, 0, 0.06);
+    }
+
+    #consolaPanel {
+      top: 100px;
+      right: 18px;
+      width: 300px;
+      max-height: calc(100vh - 140px);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #consola {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 10.5px;
+      line-height: 1.8;
+      min-height: 120px;
+    }
+    .evento { border-left: 2px solid var(--cian); padding-left: 8px; margin-bottom: 5px; }
+    .evento .hora { color: var(--cian); opacity: 0.6; margin-right: 5px; }
+    .evento.oro { border-left-color: var(--oro); }
+    .evento.rojo { border-left-color: var(--rojo); }
+
+    #leyenda {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 10;
+      font-size: 9px;
+      letter-spacing: 1px;
+      opacity: 0.55;
+      line-height: 1.7;
+    }
+
+    #carga {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 8, 10, 0.88);
+      color: var(--cian);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-align: center;
+      padding: 24px;
+    }
+    #carga.oculto { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="escena"></canvas>
+  <div id="etiquetas3d"></div>
+
+  <header class="panel">
+    <h1 id="titulo-radar">RADAR TÁCTICO DE ESPAÑA</h1>
+    <nav class="nav">
+      <a href="/">[Radar Global (/)]</a>
+      <a href="/nexus">[NexusOps (/nexus)]</a>
+      <a href="/paraguay">[Paraguay 3D (/paraguay)]</a>
+      <a href="/espana" class="activo">[España 3D (/espana)]</a>
+      <button type="button" id="resetVista" class="btn-vista">Restablecer vista</button>
+    </nav>
+    <span class="badge offline" id="badge"><span class="pulso"></span><span id="badgeTexto">OFFLINE</span></span>
+  </header>
+
+  <section id="telemetria" class="panel">
+    <h2>TELEMETRIA TERRITORIAL</h2>
+    <div class="fila"><span class="clave">PROVINCIA ACTIVA</span><span class="valor" id="deptActual">-</span></div>
+    <div class="fila"><span class="clave">CAPITAL</span><span class="valor" id="capital">-</span></div>
+    <div class="fila"><span class="clave">POBLACIÓN</span><span class="valor" id="poblacion">-</span></div>
+    <div class="fila"><span class="clave">ESTADO SECTOR</span><span class="valor" id="estadoEntrega">-</span></div>
+    <div class="fila"><span class="clave">Latitud</span><span class="valor" id="lat">-</span></div>
+    <div class="fila"><span class="clave">Longitud</span><span class="valor" id="lon">-</span></div>
+    <div class="fila"><span class="clave">Altitud</span><span class="valor" id="alt">-</span></div>
+    <div class="fila"><span class="clave">Velocidad</span><span class="valor" id="vel">-</span></div>
+    <div class="fila"><span class="clave">Secuencia</span><span class="valor" id="sec">-</span></div>
+    <div class="destacado" id="entrega">REGALOS: 0 · ENTREGAS: 0 / 52</div>
+  </section>
+
+  <section id="consolaPanel" class="panel">
+    <h2>CONSOLA DE EVENTOS</h2>
+    <div id="consola"></div>
+  </section>
+
+  <div id="leyenda">
+    <div>52 entidades provinciales · Natural Earth Admin-1 + d3-geo</div>
+    <div>Península, Baleares, Canarias, Ceuta y Melilla</div>
+  </div>
+
+  <div id="carga">SINCRONIZANDO CARTOGRAFÍA DE ESPAÑA…</div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { geoMercator } from './vendor/d3-geo.esm.js';
+    import { crearMapaGeo } from './js/mapa-geo.js';
+
+    const ANCHO = 160;
+    const ALTO = 110;
+
+    // Custom projection handling Canary Islands inset box vs Peninsula/Baleares/Ceuta/Melilla
+    // Peninsula bounds roughly lon: [-9.5, 4.4], lat: [35.2, 43.9]
+    // Canarias bounds roughly lon: [-18.3, -13.3], lat: [27.5, 29.5]
+    const projPeninsula = geoMercator().center([-3.7, 40.0]).scale(1200).translate([ANCHO / 2, ALTO / 2]);
+    const projCanarias = geoMercator().center([-15.8, 28.3]).scale(1500).translate([22, ALTO - 18]);
+
+    function proyectarEspana(lon, lat) {
+      if (lon < -13.0 && lat < 31.0) {
+        const p = projCanarias([lon, lat]);
+        return { x: p[0] - ANCHO / 2, z: p[1] - ALTO / 2 };
+      } else {
+        const p = projPeninsula([lon, lat]);
+        return { x: p[0] - ANCHO / 2, z: p[1] - ALTO / 2 };
+      }
+    }
+
+    function invertirEspana(x, z) {
+      const px = x + ANCHO / 2;
+      const pz = z + ALTO / 2;
+      // Check if in Canarias box region
+      if (px < 45 && pz > ALTO - 35) {
+        const p = projCanarias.invert([px, pz]);
+        return { lon: p[0], lat: p[1] };
+      } else {
+        const p = projPeninsula.invert([px, pz]);
+        return { lon: p[0], lat: p[1] };
+      }
+    }
+
+    const paletaComunidades = {
+      'Andalucía': 0x2e8b57,
+      'Aragón': 0xcd853f,
+      'Principado de Asturias': 0x4682b4,
+      'Illes Balears': 0x20b2aa,
+      'Canarias': 0xff8c00,
+      'Cantabria': 0x5f9ea0,
+      'Castilla-La Mancha': 0xd2b48c,
+      'Castilla y León': 0xbc8f8f,
+      'Cataluña': 0xff4500,
+      'Comunitat Valenciana': 0xff69b4,
+      'Extremadura': 0x9acd32,
+      'Galicia': 0x6495ed,
+      'Comunidad de Madrid': 0x9370db,
+      'Región de Murcia': 0xdeb887,
+      'Comunidad Foral de Navarra': 0xdc143c,
+      'País Vasco': 0x228b22,
+      'La Rioja': 0xffa07a,
+      'Ceuta': 0xdaa520,
+      'Melilla': 0xb8860b
+    };
+
+    crearMapaGeo({
+      anchoMapa: ANCHO,
+      altoMapa: ALTO,
+      alturaMapa: 0.9,
+      alturaNodo: 4.2,
+      duracionTramo: 2.8,
+      titulo: 'RADAR TÁCTICO DE ESPAÑA',
+      totalEntidades: 52,
+      rutaDatos: './data/espana-provincias.geojson',
+      proyeccion: () => ({
+        scale: () => 1,
+        translate: () => [0, 0],
+        fitSize: () => {},
+        invert: (p) => { const r = invertirEspana(p[0] - ANCHO/2, p[1] - ALTO/2); return [r.lon, r.lat]; }
+      }),
+      invertirFn: (x, z) => invertirEspana(x, z),
+      centroPaisFn: () => new THREE.Vector3(0, 5.1, 0),
+      coloresComunidad: paletaComunidades,
+      obtenerPoblacionTexto: (d) => Number(d.poblacion || 1000000).toLocaleString('es-ES'),
+      calcularRegalos: (d) => Math.max(1, Math.round(Number(d.poblacion || 1000000) / 100000)),
+      obtenerEntregaTexto: ({ entregas, regalosTotales, totalEntidades }) => 'REGALOS: ' + regalosTotales.toLocaleString('es-ES') + ' · ENTREGAS: ' + entregas + ' / ' + totalEntidades,
+      obtenerRegaloTexto: (d, tipo) => tipo === 'vuelo' ? 'EN VUELO · ' + d.regalos + ' REGALOS' : 'SECTOR COMPLETADO',
+      mostrarSectorPersonalizado: (d, estado, { elDept, elCapital, elPoblacion, elEstado }) => {
+        elDept.textContent = d.nombre + ' (' + d.comunidad + ')';
+        elCapital.textContent = d.capital || '-';
+        elPoblacion.textContent = Number(d.poblacion || 1000000).toLocaleString('es-ES');
+        elEstado.textContent = estado;
+      },
+      construirExtras: ({ geojson, escena, grupoMapa }) => {
+        // Draw Canarias inset border frame
+        const geomFrame = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-ANCHO/2 + 2, 0.2, ALTO/2 - 35),
+          new THREE.Vector3(-ANCHO/2 + 45, 0.2, ALTO/2 - 35),
+          new THREE.Vector3(-ANCHO/2 + 45, 0.2, ALTO/2 - 2),
+          new THREE.Vector3(-ANCHO/2 + 2, 0.2, ALTO/2 - 2),
+          new THREE.Vector3(-ANCHO/2 + 2, 0.2, ALTO/2 - 35)
+        ]);
+        const marco = new THREE.Line(geomFrame, new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4 }));
+        grupoMapa.add(marco);
+
+        const div = document.createElement('div');
+        div.className = 'etiqueta-depto';
+        div.textContent = 'ISLAS CANARIAS';
+        const label = new CSS2DObject(div);
+        label.position.set(-ANCHO/2 + 22, 0.5, ALTO/2 - 37);
+        escena.add(label);
+      }
+    });
+  </script>
+</body>
+</html>
